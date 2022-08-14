@@ -1,0 +1,19 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "Clan discord bot",
+  "main": "index.js",
+  "author": "Aimless321",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/rest": "^1.0.1",
+    "@discordjs/voice": "^0.11.0",
+    "discord-api-types": "^0.37.2",
+    "discord.js": "^14.2.0",
+    "sequelize": "^6.21.3",
+    "sqlite3": "^5.0.11"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.4.1"
+  }
+}
