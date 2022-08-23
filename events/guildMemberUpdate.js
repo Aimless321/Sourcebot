@@ -1,5 +1,7 @@
 const {RoleNotification} = require("../models");
 
+const NOTIFICATION_CONFIRMATION_CHANNEL_ID = '1011019878091722802';
+
 module.exports = {
     name: 'guildMemberUpdate',
     async execute(oldMember, newMember) {
@@ -18,7 +20,27 @@ module.exports = {
                 return;
             }
 
-            return newMember.send(JSON.parse(model.message))
+            const channels = newMember.guild.channels.cache;
+            const confirmationChannel = channels.get(NOTIFICATION_CONFIRMATION_CHANNEL_ID)
+            const roleName = newRoles.get(model.role).name;
+
+            newMember.send(JSON.parse(model.message)).then(() => {
+                confirmationChannel.send({
+                    embeds: [{
+                        title: "Succesfully sent role notification",
+                        description: `${roleName} notifcation sent to ${newMember.toString()}`,
+                        color: 501760
+                    }]
+                });
+            }).catch(() => {
+                confirmationChannel.send({
+                    embeds: [{
+                        title: "Failed to send role update message",
+                        description: `Cannot send message to ${newMember.toString()} for ${roleName}`,
+                        color: 16711680
+                    }]
+                });
+            });
         });
     },
 };
