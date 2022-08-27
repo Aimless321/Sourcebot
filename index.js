@@ -24,6 +24,18 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
+client.buttons = new Collection();
+const buttonsPath = path.join(__dirname, 'buttons');
+const buttonFolders = fs.readdirSync(buttonsPath).filter(file => file.endsWith('.js'));
+
+for (const file of buttonFolders) {
+    const filePath = path.join(buttonsPath, file);
+    const button = require(filePath);
+    // Set a new item in the Collection
+    // With the key as the command name and the value as the exported module
+    client.buttons.set(button.name, button);
+}
+
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 

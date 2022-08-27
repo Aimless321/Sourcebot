@@ -1,17 +1,22 @@
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction) {
-        if (!interaction.isChatInputCommand()) return;
+        let handler;
+        if (interaction.isButton()) {
+            handler = interaction.client.buttons.get(interaction.customId);
+        } else if (interaction.isChatInputCommand()) {
+            handler = interaction.client.commands.get(interaction.commandName);
+        } else {
+            return;
+        }
 
-        const command = interaction.client.commands.get(interaction.commandName);
-
-        if (!command) return;
+        if (!handler) return;
 
         try {
-            await command.execute(interaction);
+            await handler.execute(interaction);
         } catch (error) {
             console.error(error);
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            await interaction.reply({content: 'There was an error while executing this command!', ephemeral: true});
         }
     },
 };

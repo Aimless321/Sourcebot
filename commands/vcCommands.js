@@ -1,6 +1,7 @@
 const {SlashCommandBuilder} = require('discord.js');
 const {ChannelType} = require('discord-api-types/v10');
-const {VCGenerator, VC} = require('../models/');
+const {VCGenerator, VC} = require('../models');
+const {discordAdminRoleId} = require('../config.json');
 
 async function memberOwnsTheirChannel(interaction) {
     const member = interaction.member;
@@ -78,7 +79,7 @@ async function limit(interaction) {
 
 async function generate(interaction) {
     const member = interaction.member;
-    if (!member.roles.cache.has('1008032582853742652')) {
+    if (!member.roles.cache.has(discordAdminRoleId)) {
         return interaction.reply({content: 'You don\'t have permission for this command', ephemeral: true})
     }
 
