@@ -33,7 +33,7 @@ module.exports = {
             );
     },
     getSeedingButtons(disabled) {
-        return new ActionRowBuilder()
+        return [new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('seed-server1')
@@ -59,10 +59,14 @@ module.exports = {
                     .setCustomId('seed-cm2')
                     .setLabel('CM 2')
                     .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('seed-kill')
-                    .setLabel('Retreat')
-                    .setStyle(ButtonStyle.Danger),
-            );
+            ),
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('seed-kill')
+                        .setLabel('Retreat')
+                        .setStyle(ButtonStyle.Danger),
+                )
+        ];
     }
 }
