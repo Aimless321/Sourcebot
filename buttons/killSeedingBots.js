@@ -20,6 +20,6 @@ module.exports = {
         await wait(2 * 60 * 1000);
         handlerEmbed.setDescription("Bots currently not deployed")
 
-        return interaction.editReply({embeds: [handlerEmbed], components: [buttons]});
+        return interaction.editReply({embeds: [handlerEmbed], components: buttons});
     }
 }

@@ -33,33 +33,34 @@ module.exports = {
             );
     },
     getSeedingButtons(disabled) {
-        return [new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('seed-server1')
-                    .setLabel('Server 1')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-server2')
-                    .setLabel('Server 2')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-server3')
-                    .setLabel('Server 3')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-cm1')
-                    .setLabel('CM 1')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-cm2')
-                    .setLabel('CM 2')
-                    .setStyle(ButtonStyle.Primary),
-            ),
+        return [
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('seed-server1')
+                        .setLabel('Server 1')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(disabled),
+                    new ButtonBuilder()
+                        .setCustomId('seed-server2')
+                        .setLabel('Server 2')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(disabled),
+                    new ButtonBuilder()
+                        .setCustomId('seed-server3')
+                        .setLabel('Server 3')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(disabled),
+                    new ButtonBuilder()
+                        .setCustomId('seed-cm1')
+                        .setLabel('CM 1')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(disabled),
+                    new ButtonBuilder()
+                        .setCustomId('seed-cm2')
+                        .setLabel('CM 2')
+                        .setStyle(ButtonStyle.Primary),
+                ),
             new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()

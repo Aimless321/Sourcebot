@@ -11,6 +11,6 @@ module.exports = {
 
         const buttons = getSeedingButtons(true);
 
-        return interaction.update({embeds: [handlerEmbed], components: [buttons]});
+        return interaction.update({embeds: [handlerEmbed], components: buttons});
     }
 }

@@ -14,7 +14,7 @@ async function generate(interaction) {
     const buttons = getSeedingButtons(false);
 
     const channel = interaction.channel;
-    const message = await channel.send({embeds: [handlerEmbed], components: [buttons]})
+    const message = await channel.send({embeds: [handlerEmbed], components: buttons})
 
     const msgModel = DiscordMessage.upsert({
         tag: 'seed-handler',
