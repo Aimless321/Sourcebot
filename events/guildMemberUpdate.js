@@ -1,6 +1,5 @@
 const {RoleNotification} = require("../models");
-
-const NOTIFICATION_CONFIRMATION_CHANNEL_ID = '1011019878091722802';
+const {roleNotificationConfirmationChannel} = require("../config.json");
 
 module.exports = {
     name: 'guildMemberUpdate',
@@ -20,16 +19,24 @@ module.exports = {
                 return;
             }
 
+            const role = newRoles.get(model.role);
             const channels = newMember.guild.channels.cache;
-            const confirmationChannel = channels.get(NOTIFICATION_CONFIRMATION_CHANNEL_ID)
-            const roleName = newRoles.get(model.role).name;
+            const confirmationChannel = channels.get(roleNotificationConfirmationChannel);
+            let announcementChannel = channels.get(model.channel);
 
             newMember.send(JSON.parse(model.message)).then(() => {
                 confirmationChannel.send({
                     embeds: [{
                         title: "Succesfully sent role notification",
-                        description: `${roleName} notifcation sent to ${newMember.toString()}`,
+                        description: `${role.name} notifcation sent to ${newMember.toString()}`,
                         color: 501760
+                    }]
+                });
+
+                announcementChannel.send({
+                    embeds: [{
+                        description: `**Welcome ${newMember.toString()} to the ${role.toString()}!**\n\nA fellow connoisseur of rats in bushes and shouting for infantry support has arrived.`,
+                        color: 4813784
                     }]
                 });
             }).catch(() => {

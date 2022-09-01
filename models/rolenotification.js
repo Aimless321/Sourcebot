@@ -18,7 +18,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       unique: true
     },
-    message: DataTypes.STRING
+    message: DataTypes.STRING,
+    channel: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'RoleNotification',
