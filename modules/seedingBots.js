@@ -59,7 +59,8 @@ module.exports = {
                     new ButtonBuilder()
                         .setCustomId('seed-cm2')
                         .setLabel('CM 2')
-                        .setStyle(ButtonStyle.Primary),
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(disabled),
                 ),
             new ActionRowBuilder()
                 .addComponents(
