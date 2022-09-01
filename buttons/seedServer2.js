@@ -1,13 +1,14 @@
 const {sendBots, getSeedingEmbed, getSeedingButtons} = require('../modules/seedingBots')
+const {time} = require("discord.js");
 
 module.exports = {
     name: 'seed-server2',
     async execute(interaction) {
-        await sendBots('server2');
+        await sendBots('server2', interaction.member.displayName);
 
         const handlerEmbed = getSeedingEmbed()
             .setColor(0x53fd29)
-            .setDescription("40 bots deployed to server 2");
+            .setDescription(`(${time(new Date(), 'f')}) ${interaction.member.toString()}: 40 bots deployed to server 2`);
 
         const buttons = getSeedingButtons(true);
 

@@ -1,14 +1,15 @@
 const {killBots, getSeedingEmbed, getSeedingButtons} = require('../modules/seedingBots');
+const {time} = require("discord.js");
 const wait = require('node:timers/promises').setTimeout;
 
 module.exports = {
     name: 'seed-kill',
     async execute(interaction) {
-        await killBots();
+        await killBots(interaction.member.displayName);
 
         const handlerEmbed = getSeedingEmbed()
             .setColor(0x29bdfd)
-            .setDescription("Bots retreating, please stand by");
+            .setDescription(`(${time(new Date(), 'f')}) ${interaction.member.toString()}: Bots retreating, please stand by`);
 
         await interaction.message.edit({
             embeds: [handlerEmbed]
