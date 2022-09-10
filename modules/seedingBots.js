@@ -67,6 +67,11 @@ module.exports = {
             new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
+                        .setCustomId('seed-reviver')
+                        .setLabel('Enable Auto Revive')
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(disabled),
+                    new ButtonBuilder()
                         .setCustomId('seed-kill')
                         .setLabel('Retreat')
                         .setStyle(ButtonStyle.Danger),
