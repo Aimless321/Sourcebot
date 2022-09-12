@@ -5,6 +5,8 @@ const wait = require('node:timers/promises').setTimeout;
 module.exports = {
     name: 'seed-kill',
     async execute(interaction) {
+        await interaction.deferUpdate();
+
         await killBots(interaction.member.displayName);
 
         const handlerEmbed = getSeedingEmbed()
@@ -17,7 +19,6 @@ module.exports = {
 
         const buttons = getSeedingButtons(false);
 
-        await interaction.deferUpdate();
         await wait(2 * 60 * 1000);
         handlerEmbed.setDescription("Bots currently not deployed")
 
