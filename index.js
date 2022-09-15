@@ -2,15 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Client, GatewayIntentBits, Collection} = require('discord.js');
 const {token} = require('./config.json');
-
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildPresences
-    ]
-});
+require('better-logging')(console);
+const client = require('./client');
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');

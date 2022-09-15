@@ -1,9 +1,10 @@
 const {token} = require("../config.json");
+const client = require('../client');
 
 module.exports = {
-    name: 'disconnect',
-    async execute(client) {
+    name: 'shardDisconnect',
+    async execute() {
         console.error(`Bot disconnected, trying to reconnect.`);
-        await client.login(token);
+        client.login(token)
     },
 };

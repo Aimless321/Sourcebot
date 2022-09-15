@@ -5,14 +5,14 @@ const fetch = require('node-fetch-native')
 
 module.exports = {
     async sendBots(serverName, who) {
-        console.log(new Date(), `Bots sent to ${serverName} by ${who}`);
+        console.info(`Bots sent to ${serverName} by ${who}`);
         for (const botURL of botURLs) {
             const url = `${botURL}/${serverName}`;
             await fetch(url);
         }
     },
     async killBots(who) {
-        console.log(new Date(), `Bots killed by ${who}`);
+        console.info(`Bots killed by ${who}`);
         for (const botURL of botURLs) {
             const url = `${botURL}/kill`;
             await fetch(url);
