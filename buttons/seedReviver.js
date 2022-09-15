@@ -4,10 +4,6 @@ const {time} = require("discord.js");
 module.exports = {
     name: 'seed-reviver',
     async execute(interaction) {
-        if (interaction.member.id !== '261159108177166357') {
-            return interaction.reply({content: 'No access yet, sorry :(', ephemeral: true})
-        }
-
         await sendBots('reviver', interaction.member.displayName);
 
         const handlerEmbed = getSeedingEmbed()
