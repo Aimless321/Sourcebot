@@ -41,6 +41,11 @@ async function changeAudioQuality(oldState, newState) {
         return;
     }
 
+    const channel = await VCGenerator.findByPk(newState.channelId);
+    if (channel === null) {
+        return;
+    }
+
     await newState.channel.setBitrate(384000);
 }
 
