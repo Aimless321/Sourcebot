@@ -1,5 +1,6 @@
 const {VCGenerator, VC} = require('../models/');
 const {ChannelType} = require("discord-api-types/v10");
+const {musicBotId} = require("../config.json");
 
 async function removeEmptyVC(oldState, newState) {
     const channel = await VC.findByPk(oldState.channelId);
@@ -34,6 +35,15 @@ async function createNewVC(oldState, newState) {
     await vcModel.save();
 }
 
+async function changeAudioQuality(oldState, newState) {
+    const member = oldState.member;
+    if (member.id !== musicBotId) {
+        return;
+    }
+
+    await newState.channel.setBitrate(384000);
+}
+
 module.exports = {
     name: 'voiceStateUpdate',
     async execute(oldState, newState) {
@@ -45,5 +55,7 @@ module.exports = {
 
         // Check if its a generator channel and make a new VC if yes
         await createNewVC(oldState, newState);
+
+        await changeAudioQuality(oldState, newState);
     },
 };
