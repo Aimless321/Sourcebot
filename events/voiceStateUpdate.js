@@ -11,7 +11,8 @@ async function removeEmptyVC(oldState, newState) {
     const oldChannel = oldState.channel;
     const numMembers = oldChannel.members.size;
     if (numMembers === 0) {
-        oldChannel.delete();
+        await oldChannel.delete();
+        await channel.destroy();
     }
 }
 
@@ -41,7 +42,7 @@ async function changeAudioQuality(oldState, newState) {
         return;
     }
 
-    const channel = await VCGenerator.findByPk(newState.channelId);
+    const channel = await VC.findByPk(newState.channelId);
     if (channel === null) {
         return;
     }
