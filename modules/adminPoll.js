@@ -6,8 +6,8 @@ const {AdminPollVote} = require("../models");
 function getVotingEmbed(admin) {
     return new EmbedBuilder()
         .setTitle(`Cast your vote for: ${admin.displayName}`)
-        .setDescription(`:thumbsup: If you'd like to keep them as admin\n
-                         :thumbsdown: If you don't trust them as admin\n
+        .setDescription(`:thumbsup: If they're doing a good job as admin\n
+                         :thumbsdown: If they're not pulling their weight\n
                          :flag_ch: Neutral vote`);
 }
 
