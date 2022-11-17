@@ -30,15 +30,22 @@ module.exports = {
         const overviews = await CostOverview.findAll();
 
         for (const overview of overviews) {
-            const channel = await client.channels.fetch(overview.channelId);
-            if (!channel) {
-                await overview.destroy();
-                continue;
+            let channel;
+            try {
+                channel = await client.channels.fetch(overview.channelId);
+            } catch(e) {
+                if (e.rawError.message === "Unknown Channel") {
+                    await overview.destroy();
+                    continue;
+                }
             }
 
-            const message = await channel.messages.fetch(overview.messageId);
-            if (!message) {
-                await overview.destroy();
+            try {
+                await channel.messages.fetch(overview.messageId);
+            } catch(e) {
+                if (e.rawError.message === "Unknown Message") {
+                    await overview.destroy();
+                }
             }
         }
     },
