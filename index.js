@@ -5,8 +5,7 @@ const {token} = require('./config.json');
 require('better-logging')(console);
 const client = require('./client');
 const cron = require("node-cron");
-const {CostOverview} = require("./models");
-const {getCostsEmbed} = require("./modules/costs");
+const { updateCostOverviews} = require("./modules/costs");
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -48,16 +47,4 @@ for (const file of eventFiles) {
 // Login to Discord with your client's token
 client.login(token);
 
-cron.schedule('*/15 * * * *', async () => {
-    console.info('Updating cost overviews');
-
-    const overviews = await CostOverview.findAll();
-
-    for (const overview of overviews) {
-        const channel = await client.channels.fetch(overview.channelId);
-        const message = await channel.messages.fetch(overview.messageId);
-
-        const costsEmbed = await getCostsEmbed();
-        await message.edit(costsEmbed);
-    }
-});
+cron.schedule('*/15 * * * *', () => updateCostOverviews(client));

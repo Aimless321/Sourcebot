@@ -1,9 +1,10 @@
 const {patreonId, patreonUrl} = require("../config.json");
 const fetch = require("node-fetch-native");
-const {Contribution, Cost} = require("../models");
+const {Contribution, Cost, CostOverview} = require("../models");
 const sequelize = require("sequelize");
 const {EmbedBuilder, ActionRowBuilder, ButtonBuilder} = require("discord.js");
 const {ButtonStyle} = require("discord-api-types/v10");
+const client = require("../client");
 
 function progressBar(value, maxValue, size) {
     const percentage = value / maxValue; // Calculate the percentage of the bar
@@ -66,5 +67,18 @@ module.exports = {
             )
 
         return {embeds: [embed], components: [buttons]};
+    },
+    async updateCostOverviews(client) {
+        console.info('Updating cost overviews');
+
+        const overviews = await CostOverview.findAll();
+
+        for (const overview of overviews) {
+            const channel = await client.channels.fetch(overview.channelId);
+            const message = await channel.messages.fetch(overview.messageId);
+
+            const costsEmbed = await getCostsEmbed();
+            await message.edit(costsEmbed);
+        }
     }
 }
