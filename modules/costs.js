@@ -19,7 +19,7 @@ function progressBar(value, maxValue, size) {
 }
 
 module.exports = {
-    async getCostsEmbed() {
+    getCostsEmbed: async function () {
         const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}`;
         const res = await fetch(PATREON_API_URL);
         const patreonContributions = (await res.json()).data.attributes.pledge_sum;
@@ -49,7 +49,7 @@ module.exports = {
             .setFields(
                 {
                     name: 'Monthly cost breakdown',
-                    value: costsString + '\n'
+                    value: `${costsString}\nTotal costs: ${(totalCosts / 100).toFixed(2)}`
                 },
                 {
                     name: 'Current contributions',
