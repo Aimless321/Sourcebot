@@ -50,7 +50,7 @@ module.exports = {
             .setFields(
                 {
                     name: 'Monthly cost breakdown',
-                    value: `${costsString}\nTotal costs: ${(totalCosts / 100).toFixed(2)}`
+                    value: `${costsString}\nTotal costs: €${(totalCosts / 100).toFixed(2)}`
                 },
                 {
                     name: 'Current contributions',
