@@ -19,55 +19,57 @@ function progressBar(value, maxValue, size) {
     return '```[' + progressText + emptyProgressText + '] ' + percentageText + '```';
 }
 
+async function getCostsEmbed() {
+    const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}`;
+    const res = await fetch(PATREON_API_URL);
+    const patreonContributions = (await res.json()).data.attributes.pledge_sum;
+
+    const contributions = await Contribution.findOne({
+        attributes: [
+            [sequelize.fn("SUM", sequelize.col("amount")), "total"],
+        ],
+        raw: true
+    });
+
+    const totalContributions = patreonContributions + contributions.total;
+
+    const costs = await Cost.findAll({order: [["amount", "DESC"]]});
+
+    let totalCosts = 0;
+    let costsString = "";
+    for (const cost of costs) {
+        totalCosts += cost.amount;
+        costsString += `${cost.title}: €${(cost.amount / 100).toFixed(2)}\n`;
+    }
+
+    const embed = new EmbedBuilder()
+        .setColor(0xd4af37)
+        .setTitle("The Circle needs your support!")
+        .setDescription("All of our costs are covered by our members and donations through our [Patreon](https://www.patreon.com/CircleGaming).\n")
+        .setFields(
+            {
+                name: 'Monthly cost breakdown',
+                value: `${costsString}\nTotal costs: €${(totalCosts / 100).toFixed(2)}`
+            },
+            {
+                name: 'Current contributions',
+                value: `€${(totalContributions / 100).toFixed(2)}\n${progressBar(totalContributions, totalCosts, 22)}`
+            }
+        );
+
+    const buttons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setLabel('Patreon')
+                .setURL(patreonUrl)
+                .setStyle(ButtonStyle.Link),
+        )
+
+    return {embeds: [embed], components: [buttons]};
+}
+
 module.exports = {
-    getCostsEmbed: async function () {
-        const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}`;
-        const res = await fetch(PATREON_API_URL);
-        const patreonContributions = (await res.json()).data.attributes.pledge_sum;
-
-        const contributions = await Contribution.findOne({
-            attributes: [
-                [sequelize.fn("SUM", sequelize.col("amount")), "total"],
-            ],
-            raw: true
-        });
-
-        const totalContributions = patreonContributions + contributions.total;
-
-        const costs = await Cost.findAll({order: [["amount", "DESC"]]});
-
-        let totalCosts = 0;
-        let costsString = "";
-        for (const cost of costs) {
-            totalCosts += cost.amount;
-            costsString += `${cost.title}: €${(cost.amount / 100).toFixed(2)}\n`;
-        }
-
-        const embed = new EmbedBuilder()
-            .setColor(0xd4af37)
-            .setTitle("The Circle needs your support!")
-            .setDescription("All of our costs are covered by our members and donations through our [Patreon](https://www.patreon.com/CircleGaming).\n")
-            .setFields(
-                {
-                    name: 'Monthly cost breakdown',
-                    value: `${costsString}\nTotal costs: €${(totalCosts / 100).toFixed(2)}`
-                },
-                {
-                    name: 'Current contributions',
-                    value: `€${(totalContributions / 100).toFixed(2)}\n${progressBar(totalContributions, totalCosts, 22)}`
-                }
-            );
-
-        const buttons = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setLabel('Patreon')
-                    .setURL(patreonUrl)
-                    .setStyle(ButtonStyle.Link),
-            )
-
-        return {embeds: [embed], components: [buttons]};
-    },
+    getCostsEmbed,
     async updateCostOverviews(client) {
         console.info('Updating cost overviews');
 
