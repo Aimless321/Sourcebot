@@ -4,12 +4,15 @@ const {
 } = require('discord.js');
 const {discordAdminRoleId} = require("../config.json");
 const {Contribution} = require("../models");
+const {updateCostOverviews} = require("../modules/costs");
 
 async function addContribtuon(interaction) {
     const user = interaction.options.getUser('user');
     const amount = interaction.options.getNumber('amount');
 
     await Contribution.upsert({discordId: user.id, amount});
+
+    await updateCostOverviews(interaction.client);
 
     return await interaction.reply({ephemeral: true, content: `Contribution added for ${user.toString()}: ${(amount / 100).toFixed(2)}`})
 }
@@ -42,6 +45,8 @@ async function removeContribution(interaction) {
     const count = await Contribution.destroy({where: {discordId: user.id}});
 
     if (count > 0) {
+        await updateCostOverviews(interaction.client);
+
         return await interaction.reply({ephemeral: true, content: `Removed contribution of ${user.toString()}`});
     }
 

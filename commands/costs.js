@@ -4,7 +4,8 @@ const {
 } = require('discord.js');
 const {discordAdminRoleId} = require("../config.json");
 const {Cost, CostOverview} = require("../models");
-const {getCostsEmbed} = require("../modules/costs");
+const {getCostsEmbed, updateCostOverviews} = require("../modules/costs");
+const client = require("../client");
 
 async function overview(interaction) {
     const costOverview = await getCostsEmbed();
@@ -26,6 +27,8 @@ async function addCost(interaction) {
 
     const model = Cost.build({title, amount});
     await model.save();
+
+    await updateCostOverviews(interaction.client);
 
     return await interaction.reply({ephemeral: true, content: `Cost added for ${title}: ${(amount / 100).toFixed(2)}`})
 }
@@ -57,6 +60,8 @@ async function removeCost(interaction) {
     const count = await Cost.destroy({where: {id: idToRemove}});
 
     if (count > 0) {
+        await updateCostOverviews(interaction.client);
+
         return await interaction.reply({ephemeral: true, content: `Removed cost with id: ${idToRemove}`});
     }
 

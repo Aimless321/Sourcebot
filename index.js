@@ -47,4 +47,4 @@ for (const file of eventFiles) {
 // Login to Discord with your client's token
 client.login(token);
 
-cron.schedule('*/15 * * * *', () => updateCostOverviews(client));
+cron.schedule('*/15 * * * *', async () => await updateCostOverviews(client));
