@@ -1,4 +1,6 @@
 const {VC} = require('../models/');
+const {CostOverview} = require("../models");
+const client = require("../client");
 
 module.exports = {
     name: 'ready',
@@ -23,5 +25,21 @@ module.exports = {
         }
 
         console.info(`Cleaned ${numClean} VC models`);
+
+
+        const overviews = await CostOverview.findAll();
+
+        for (const overview of overviews) {
+            const channel = await client.channels.fetch(overview.channelId);
+            if (!channel) {
+                await overview.destroy();
+                continue;
+            }
+
+            const message = await channel.messages.fetch(overview.messageId);
+            if (!message) {
+                await overview.destroy();
+            }
+        }
     },
 };
