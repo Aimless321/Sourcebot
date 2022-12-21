@@ -1,9 +1,9 @@
-const {feedbackChannel} = require("../config.json");
+const {threadedChannels} = require("../config.json");
 
 module.exports = {
     name: 'messageCreate',
     async execute(message) {
-        if (message.channelId !== feedbackChannel) {
+        if (!threadedChannels.includes(message.channelId)) {
             return;
         }
 
