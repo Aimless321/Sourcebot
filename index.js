@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Collection} = require('discord.js');
 const {token} = require('./config.json');
-require('better-logging')(console);
+// require('better-logging')(console);
 const client = require('./client');
 const cron = require("node-cron");
 const { updateCostOverviews} = require("./modules/costs");
