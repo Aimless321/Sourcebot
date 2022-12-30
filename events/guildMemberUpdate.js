@@ -1,5 +1,16 @@
 const {RoleNotification} = require("../models");
-const {roleNotificationConfirmationChannel} = require("../config.json");
+const {roleNotificationConfirmationChannel, timeoutRole} = require("../config.json");
+
+async function handleTimeout(member) {
+    await member.roles.remove(timeoutRole);
+    // Timeout for 5 minutes
+    try {
+        await member.timeout(5 * 60 * 1000, 'They are a counting cunt');
+        console.log('Handed out a timeout to', member.displayName);
+    } catch(e) {
+        console.info('Couldn\'t hand out timeout to', member.displayName);
+    }
+}
 
 module.exports = {
     name: 'guildMemberUpdate',
@@ -7,6 +18,10 @@ module.exports = {
         const oldRoles = oldMember.roles.cache;
         const newRoles = newMember.roles.cache.difference(oldRoles);
         const newIds = newRoles.map(role => role.id);
+
+        if (newIds.includes(timeoutRole)) {
+            await handleTimeout(newMember);
+        }
 
         const models = await RoleNotification.findAll({
             where: {
