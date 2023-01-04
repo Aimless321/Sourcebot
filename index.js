@@ -2,11 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Collection} = require('discord.js');
 const {token} = require('./config.json');
-// require('better-logging')(console);
+require('better-logging')(console);
 const client = require('./client');
 const cron = require("node-cron");
-const { updateCostOverviews} = require("./modules/costs");
-const {cleanUpEvents, sendSignupReminders} = require("./modules/signupScheduler");
+const {updateCostOverviews} = require("./modules/costs");
+const {cleanUpEvents, sendSignupReminders, sendRecruitNotifications} = require("./modules/scheduler");
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -51,12 +51,13 @@ for (const file of eventFiles) {
 
 // Login to Discord with your client's token
 client.login(token).then(() => {
-    cleanUpEvents(client)
-    sendSignupReminders(client)
+    cleanUpEvents(client);
+    sendSignupReminders(client);
+    sendRecruitNotifications(client);
 });
-
 
 
 cron.schedule('*/15 * * * *', async () => await updateCostOverviews(client));
 cron.schedule('0 * * * *', async () => await cleanUpEvents(client));
-cron.schedule('* * * * *', async () => await sendSignupReminders(client));
+cron.schedule('0 * * * *', async () => await sendSignupReminders(client));
+cron.schedule('0 * * * *', async () => await sendRecruitNotifications(client));

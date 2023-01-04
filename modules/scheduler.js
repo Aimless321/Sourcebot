@@ -1,7 +1,12 @@
-const {Event, EventSignup} = require("../models");
+const {Event, Recruit} = require("../models");
 const {Op} = require("sequelize");
-const {mandatorySignupRole, roleNotificationConfirmationChannel} = require("../config.json");
-const {EmbedBuilder, time} = require("discord.js");
+const {
+    mandatorySignupRole,
+    roleNotificationConfirmationChannel,
+    recruitmentAdminChannel,
+    recruitmentAdminRoleId
+} = require("../config.json");
+const {EmbedBuilder, time, roleMention} = require("discord.js");
 const {removeSignUpForm} = require("./signup");
 
 module.exports = {
@@ -62,10 +67,40 @@ module.exports = {
         });
 
         for (let event of events) {
-            console.info(`Cleaing up event ${event.name}`);
+            console.info(`Cleaning up event ${event.name}`);
 
-            removeSignUpForm(event, client);
+            await removeSignUpForm(event, client);
         }
+    },
+    async sendRecruitNotifications(client) {
+        const recruits = await Recruit.findAll({
+            where: {
+                periodEnd: {
+                    [Op.lte]: new Date()
+                }
+            }
+        });
 
+        const embed = new EmbedBuilder()
+            .setTitle(`Recruitment period expired`)
+            .setColor(0xF1C40F)
+
+        for (let recruit of recruits) {
+            if (recruit.notificationSent) {
+                continue;
+            }
+
+            const guild = await client.guilds.fetch(recruit.guildId);
+            const member = await guild.members.fetch(recruit.discordId);
+
+            console.info(`Recruitment period ended for ${member.displayName}`);
+            embed.setDescription(`1 month has passed since the promotion of ${member.toString()}`);
+
+            const adminChannel = await guild.channels.fetch(recruitmentAdminChannel);
+            await adminChannel.send({embeds: [embed], content: roleMention(recruitmentAdminRoleId)});
+
+            recruit.notificationSent = true;
+            await recruit.save();
+        }
     }
 };

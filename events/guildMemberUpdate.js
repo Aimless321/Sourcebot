@@ -1,13 +1,13 @@
-const {RoleNotification} = require("../models");
-const {roleNotificationConfirmationChannel, timeoutRole} = require("../config.json");
+const {RoleNotification, Recruit} = require("../models");
+const {roleNotificationConfirmationChannel, timeoutRoleId, recruitRoleId} = require("../config.json");
 
 async function handleTimeout(member) {
-    await member.roles.remove(timeoutRole);
+    await member.roles.remove(timeoutRoleId);
     // Timeout for 5 minutes
     try {
         await member.timeout(5 * 60 * 1000, 'They are a counting cunt');
         console.log('Handed out a timeout to', member.displayName);
-    } catch(e) {
+    } catch (e) {
         console.info('Couldn\'t hand out timeout to', member.displayName);
     }
 }
@@ -16,10 +16,30 @@ module.exports = {
     name: 'guildMemberUpdate',
     async execute(oldMember, newMember) {
         const oldRoles = oldMember.roles.cache;
-        const newRoles = newMember.roles.cache.difference(oldRoles);
-        const newIds = newRoles.map(role => role.id);
+        const newRoles = newMember.roles.cache;
+        const roleDiff = newMember.roles.cache.difference(oldRoles);
+        const newIds = roleDiff.map(role => role.id);
 
-        if (newIds.includes(timeoutRole)) {
+        // Member added to recruits
+        if (!oldRoles.has(recruitRoleId) && newRoles.has(recruitRoleId)) {
+            const now = new Date();
+            const oneMonthFromNow = new Date(new Date().setMonth(now.getMonth() + 1));
+
+            await Recruit.upsert({
+                discordId: newMember.id,
+                guildId: newMember.guild.id,
+                periodStart: now,
+                periodEnd: oneMonthFromNow,
+                notificationSent: false
+            });
+        }
+
+        // Removed from recruits
+        if (oldRoles.has(recruitRoleId) && !newRoles.has(recruitRoleId)) {
+            await Recruit.destroy({where: {discordId: newMember.id}});
+        }
+
+        if (newIds.includes(timeoutRoleId)) {
             await handleTimeout(newMember);
         }
 
@@ -30,11 +50,11 @@ module.exports = {
         });
 
         models.forEach(model => {
-            if (!newMember.roles.cache.has(model.role)) {
+            if (!newRoles.has(model.role)) {
                 return;
             }
 
-            const role = newRoles.get(model.role);
+            const role = roleDiff.get(model.role);
             const channels = newMember.guild.channels.cache;
             const confirmationChannel = channels.get(roleNotificationConfirmationChannel);
             let announcementChannel = channels.get(model.channel);
