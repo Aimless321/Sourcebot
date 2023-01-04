@@ -9,7 +9,7 @@ const {
     time, userMention, roleMention, quote,
 } = require('discord.js');
 const {TextInputStyle, ButtonStyle} = require("discord-api-types/v10");
-const {Event} = require("../models");
+const {Event, EventSignup} = require("../models");
 
 function formatSignups(signups, type) {
     const signupsOfType = signups.filter(signup => signup.type === type);
@@ -303,6 +303,39 @@ module.exports = {
         await eventModel.save();
 
         return await interaction4.reply({ephemeral: true, content: 'Event created'});
+    },
+    async removeSignUpForm(model, client) {
+        await model.destroy();
+
+        try {
+            const channel = await client.channels.fetch(model.channelId, {force: true});
+            const message = await channel.messages.fetch(model.messageId);
+
+            if (model.attendeeRole) {
+                const role = message.guild.roles.cache.get(model.attendeeRole);
+                await message.guild.roles.create({
+                    data: {
+                        name: role.name,
+                        color: role.color,
+                        hoist: role.hoist,
+                        position: role.position,
+                        permissions: role.permissions,
+                        mentionable: role.mentionable
+                    }
+                });
+                await role.delete('Emptying role');
+            }
+
+            await message.delete();
+            await EventSignup.destroy({where: {eventId: model.id}});
+            await model.destroy();
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+
+
+        return true;
     },
     async updateSignup(interaction, model) {
         const embed = await getEventEmbed(model);

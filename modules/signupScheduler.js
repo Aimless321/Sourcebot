@@ -2,6 +2,7 @@ const {Event, EventSignup} = require("../models");
 const {Op} = require("sequelize");
 const {mandatorySignupRole, roleNotificationConfirmationChannel} = require("../config.json");
 const {EmbedBuilder, time} = require("discord.js");
+const {removeSignUpForm} = require("./signup");
 
 module.exports = {
     async sendSignupReminders(client) {
@@ -63,32 +64,7 @@ module.exports = {
         for (let event of events) {
             console.info(`Cleaing up event ${event.name}`);
 
-            const channel = await client.channels.fetch(event.channelId);
-            if (!channel) {
-                console.error('Cannot fetch channel with id:', event.channelId);
-                continue;
-            }
-
-            const message = await channel.messages.fetch(event.messageId);
-
-            if (event.attendeeRole) {
-                const role = message.guild.roles.cache.get(event.attendeeRole);
-                await message.guild.roles.create({
-                    data: {
-                        name: role.name,
-                        color: role.color,
-                        hoist: role.hoist,
-                        position: role.position,
-                        permissions: role.permissions,
-                        mentionable: role.mentionable
-                    }
-                });
-                await role.delete('Emptying role');
-            }
-
-            await message.delete();
-            await EventSignup.destroy({where: {eventId: event.id}});
-            await event.destroy();
+            removeSignUpForm(event, client);
         }
 
     }
