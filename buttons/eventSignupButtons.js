@@ -8,7 +8,7 @@ async function execute(interaction) {
 
     await updateSignup(interaction, eventModel);
 
-    if (selectedOption !== 'decline') {
+    if (eventModel.attendeeRole && selectedOption !== 'decline') {
         await interaction.member.roles.add(eventModel.attendeeRole);
     } else if (interaction.member.roles.cache.has(eventModel.attendeeRole)) {
         await interaction.member.roles.remove(eventModel.attendeeRole);
