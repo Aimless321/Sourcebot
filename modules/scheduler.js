@@ -3,8 +3,7 @@ const {Op} = require("sequelize");
 const {
     mandatorySignupRole,
     roleNotificationConfirmationChannel,
-    recruitmentAdminChannel,
-    recruitmentAdminRoleId
+    recruitmentAdminChannel
 } = require("../config.json");
 const {EmbedBuilder, time, roleMention} = require("discord.js");
 const {removeSignUpForm} = require("./signup");
@@ -97,7 +96,7 @@ module.exports = {
             embed.setDescription(`1 month has passed since the promotion of ${member.toString()}`);
 
             const adminChannel = await guild.channels.fetch(recruitmentAdminChannel);
-            await adminChannel.send({embeds: [embed], content: roleMention(recruitmentAdminRoleId)});
+            await adminChannel.send({embeds: [embed]});
 
             recruit.notificationSent = true;
             await recruit.save();
