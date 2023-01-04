@@ -8,6 +8,12 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      channelId: {
+        type: Sequelize.STRING
+      },
+      messageId: {
+        type: Sequelize.STRING
+      },
       name: {
         type: Sequelize.STRING
       },
@@ -21,10 +27,11 @@ module.exports = {
         type: Sequelize.STRING
       },
       mentionRoles: {
-        type: Sequelize.STRING
+        type: Sequelize.JSON
       },
       options: {
-        type: Sequelize.JSONB
+        type: Sequelize.STRING,
+        defaultValue: 'signup_generic'
       },
       createdAt: {
         allowNull: false,

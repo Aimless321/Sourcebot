@@ -2,10 +2,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Collection} = require('discord.js');
 const {token} = require('./config.json');
-// require('better-logging')(console);
+require('better-logging')(console);
 const client = require('./client');
 const cron = require("node-cron");
 const { updateCostOverviews} = require("./modules/costs");
+const {cleanUpEvents} = require("./modules/signupScheduler");
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -26,9 +27,13 @@ const buttonFolders = fs.readdirSync(buttonsPath).filter(file => file.endsWith('
 for (const file of buttonFolders) {
     const filePath = path.join(buttonsPath, file);
     const button = require(filePath);
-    // Set a new item in the Collection
-    // With the key as the command name and the value as the exported module
-    client.buttons.set(button.name, button);
+
+    if (!Array.isArray(button.name)) {
+        client.buttons.set(button.name, button);
+        continue;
+    }
+
+    button.name.forEach(name => client.buttons.set(name, button));
 }
 
 const eventsPath = path.join(__dirname, 'events');
@@ -48,3 +53,4 @@ for (const file of eventFiles) {
 client.login(token);
 
 cron.schedule('*/15 * * * *', async () => await updateCostOverviews(client));
+cron.schedule('* * * * *', async () => await cleanUpEvents(client));

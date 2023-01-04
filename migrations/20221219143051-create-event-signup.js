@@ -9,10 +9,12 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       eventId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        unique: 'unique_signup'
       },
       discordId: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        unique: 'unique_signup'
       },
       type: {
         type: Sequelize.STRING
@@ -24,6 +26,12 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      }
+    }, {
+      uniqueKeys: {
+        unique_signup: {
+          fields: ['eventId', 'discordId']
+        }
       }
     });
   },

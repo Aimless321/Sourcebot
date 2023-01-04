@@ -11,14 +11,18 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      models.Event.hasMany(EventSignup, {
-        foreignKey: 'eventId'
-      })
+      EventSignup.belongsTo(models.Event);
     }
   }
   EventSignup.init({
-    eventId: DataTypes.INTEGER,
-    discordId: DataTypes.STRING,
+    eventId: {
+      type: DataTypes.INTEGER,
+      unique: 'unique_signup'
+    },
+    discordId: {
+      type: DataTypes.STRING,
+      unique: 'unique_signup'
+    },
     type: DataTypes.STRING
   }, {
     sequelize,

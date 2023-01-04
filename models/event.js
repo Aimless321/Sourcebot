@@ -10,16 +10,21 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Event.hasMany(models.EventSignup, {onDelete: 'CASCADE'});
     }
   }
   Event.init({
+    channelId: DataTypes.STRING,
+    messageId: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     eventDate: DataTypes.DATE,
     attendeeRole: DataTypes.STRING,
-    mentionRoles: DataTypes.STRING,
-    options: DataTypes.JSONB
+    mentionRoles: DataTypes.JSON,
+    options: {
+      type: DataTypes.STRING,
+      defaultValue: 'signup_generic'
+    },
   }, {
     sequelize,
     modelName: 'Event',
