@@ -7,6 +7,7 @@ const client = require('./client');
 const cron = require("node-cron");
 const {updateCostOverviews} = require("./modules/costs");
 const {cleanUpEvents, sendSignupReminders, sendRecruitNotifications} = require("./modules/scheduler");
+const {scheduledDeploy} = require("./modules/seedingBots");
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -61,3 +62,4 @@ cron.schedule('*/15 * * * *', async () => await updateCostOverviews(client));
 cron.schedule('0 * * * *', async () => await cleanUpEvents(client));
 cron.schedule('0 * * * *', async () => await sendSignupReminders(client));
 cron.schedule('0 * * * *', async () => await sendRecruitNotifications(client));
+cron.schedule('0 7 * * *', async () => await scheduledDeploy(client, 'server1'));
