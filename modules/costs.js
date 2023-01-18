@@ -52,7 +52,7 @@ async function getCostsEmbed() {
                 value: `${costsString}\nTotal costs: €${(totalCosts / 100).toFixed(2)}`
             },
             {
-                name: 'Current contributions',
+                name: 'Current contributions (Patreon + Sponsors)',
                 value: `€${(totalContributions / 100).toFixed(2)}\n${progressBar(totalContributions, totalCosts, 22)}`
             }
         );
