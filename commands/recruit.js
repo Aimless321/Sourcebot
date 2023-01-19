@@ -29,7 +29,7 @@ async function listRecruits(interaction) {
         );
 
 
-    return await interaction.reply({ephemeral: true, embeds: [embed]})
+    return await interaction.reply({embeds: [embed]})
 }
 
 module.exports = {
