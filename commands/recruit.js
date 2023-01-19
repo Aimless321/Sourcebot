@@ -19,7 +19,7 @@ async function listRecruits(interaction) {
     }
 
     const embed = new EmbedBuilder()
-        .setColor(0x3447003)
+        .setColor(0x3498DB)
         .setTitle("All tracked recruits")
         .setFields(
             {
