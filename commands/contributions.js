@@ -22,8 +22,12 @@ async function listContributions(interaction) {
 
     let contributionsString = "";
     for (const contribution of contributions) {
-        const user = await interaction.guild.members.fetch(contribution.discordId);
-        contributionsString += `${contribution.id}. ${user.toString()}: ${(contribution.amount / 100).toFixed(2)}\n`;
+        try {
+            const user = await interaction.guild.members.fetch(contribution.discordId);
+            contributionsString += `${contribution.id}. ${user.toString()}: ${(contribution.amount / 100).toFixed(2)}\n`;
+        } catch (e) {
+            contributionsString += `${contribution.id}. ${contribution.discordId}: ${(contribution.amount / 100).toFixed(2)}\n`;
+        }
     }
 
     const embed = new EmbedBuilder()
