@@ -21,13 +21,7 @@ async function listRecruits(interaction) {
     const embed = new EmbedBuilder()
         .setColor(0x3498DB)
         .setTitle("All tracked recruits")
-        .setFields(
-            {
-                name: 'List',
-                value: recruitString
-            }
-        );
-
+        .setDescription(recruitString);
 
     return await interaction.reply({embeds: [embed]})
 }
