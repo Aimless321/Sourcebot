@@ -6,17 +6,17 @@
   "author": "Aimless321",
   "license": "ISC",
   "dependencies": {
-    "@discordjs/rest": "^1.0.1",
+    "@discordjs/rest": "^1.6.0",
     "@discordjs/voice": "^0.11.0",
     "better-logging": "^5.0.0",
-    "discord-api-types": "^0.37.2",
-    "discord.js": "^14.7.1",
+    "discord-api-types": "^0.37.37",
+    "discord.js": "^14.8.0",
     "node-cron": "^3.0.2",
-    "node-fetch-native": "^0.1.4",
-    "sequelize": "^6.21.3",
-    "sqlite3": "^5.0.11"
+    "node-fetch-native": "^0.1.8",
+    "sequelize": "^6.30.0",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
-    "sequelize-cli": "^6.4.1"
+    "sequelize-cli": "^6.6.0"
   }
 }
