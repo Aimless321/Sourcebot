@@ -90,16 +90,21 @@ module.exports = {
             }
 
             const guild = await client.guilds.fetch(recruit.guildId);
-            const member = await guild.members.fetch(recruit.discordId);
 
-            console.info(`Recruitment period ended for ${member.displayName}`);
-            embed.setDescription(`1 month has passed since the promotion of ${member.toString()}`);
+            try {
+                const member = await guild.members.fetch(recruit.discordId);
 
-            const adminChannel = await guild.channels.fetch(recruitmentAdminChannel);
-            await adminChannel.send({embeds: [embed]});
+                console.info(`Recruitment period ended for ${member.displayName}`);
+                embed.setDescription(`1 month has passed since the promotion of ${member.toString()}`);
 
-            recruit.notificationSent = true;
-            await recruit.save();
+                const adminChannel = await guild.channels.fetch(recruitmentAdminChannel);
+                await adminChannel.send({embeds: [embed]});
+
+                recruit.notificationSent = true;
+                await recruit.save();
+            } catch (e) {
+                await recruit.destroy();
+            }
         }
     }
 };
