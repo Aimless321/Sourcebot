@@ -8,7 +8,9 @@
   "dependencies": {
     "@discordjs/rest": "^1.6.0",
     "@discordjs/voice": "^0.11.0",
+    "@waylaidwanderer/chatgpt-api": "^1.33.2",
     "better-logging": "^5.0.0",
+    "compromise": "^14.8.2",
     "discord-api-types": "^0.37.37",
     "discord.js": "^14.8.0",
     "node-cron": "^3.0.2",
