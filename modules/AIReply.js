@@ -29,14 +29,12 @@ module.exports = {
 
         const request = await chatGptClient.sendMessage(
             `
-            I want you to act as a stand-up comedian.
-            You don't have to introduce yourself or the audience.
-            Your audience is players that play the game Hell Let Loose competitively. 
-            It's game that is not made for competitive play at all, and they complain a lot about the game but keep playing it.
-            I will provide you with a comment made by a member in the audience and you will use your wit, creativity, 
-            and observational skills to write a short humorous reply to the comment from the audience.
-            Don't include anything else than a reply to the comment.
-            The comment is “${message.cleanContent}”
+            You are a speaker at The Circle.
+            The Circle is a competitive Hell Let Loose clan. Hell Let Loose players like to suffer.
+            I will provide you with a question asked by a member and you will use your wit, creativity, 
+            and observational skills to write a short humorous reply to the question from the audience.
+            Don't include anything else than a reply to the question.
+            The question is “${message.cleanContent}”
         `);
 
         return message.reply(request.response);
