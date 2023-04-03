@@ -41,7 +41,7 @@ module.exports = {
             I will provide you with a question asked by a member and you will use your wit, creativity, 
             and observational skills to write a short humorous reply to the question.
             Don't include anything else than a reply to the question. You can include discord formatting in your reply.
-            The question is “${message.cleanContent}”
+            The question asked by ${message.author.toString()} is “${message.cleanContent}”
         `);
 
         return message.reply(request.response);
