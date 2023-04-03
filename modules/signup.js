@@ -275,7 +275,10 @@ async function confirmInfo(interaction, model) {
     return message.awaitMessageComponent({time: 300_000})
         .then(interaction => {
             return [interaction, interaction.customId === 'signup-create-confirm'];
-        }).catch(console.error);
+        }).catch(() => {
+            console.log('Confirmation expired');
+            return [interaction, false];
+        });
 }
 
 
