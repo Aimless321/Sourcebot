@@ -12,7 +12,7 @@ const clientOptions = {
 
 module.exports = {
     async replyToMessage(message) {
-        if (message.author.bot || message.cleanContent.length < 35) {
+        if (message.author.bot || message.cleanContent.length < 25) {
             return;
         }
 
