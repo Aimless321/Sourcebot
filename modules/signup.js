@@ -6,7 +6,7 @@ const {
     StringSelectMenuBuilder,
     RoleSelectMenuBuilder,
     ButtonBuilder,
-    time, userMention, roleMention, quote,
+    time, userMention, roleMention, quote, hyperlink
 } = require('discord.js');
 const {TextInputStyle, ButtonStyle} = require("discord-api-types/v10");
 const {Event, EventSignup} = require("../models");
@@ -82,7 +82,11 @@ async function getEventEmbed(model) {
     return new EmbedBuilder()
         .setTitle(model.name)
         .setDescription(`${time(model.eventDate, 'F')}\n\n${model.description}`)
-        .setFields({name: 'Attendee role', value: roleMention(model.attendeeRole)}, ...fields);
+        .setFields(
+            {name: 'Attendee role', value: roleMention(model.attendeeRole)},
+            {name: 'Links', value: hyperlink('Add to Google Calendar', `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(model.name)}&details=&location=&dates=${new Date(model.eventDate.getTime()).toISOString().replace(/[^\w\s]/gi, '')}/${new Date(model.eventDate.getTime() + 90*60000).toISOString().replace(/[^\w\s]/gi, '')}`)},
+            ...fields
+        );
 }
 
 function getEventMentions(model) {
