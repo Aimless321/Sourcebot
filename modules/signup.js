@@ -42,7 +42,7 @@ function formatSignups(signups, type) {
         fields.push({
             inline: true,
             name: `​`,
-            value: signupList.substring(splitPos + 2)
+            value: blockQuote(signupList.substring(splitPos + 1))
         });
     }
 
