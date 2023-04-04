@@ -6,10 +6,21 @@ const {
     StringSelectMenuBuilder,
     RoleSelectMenuBuilder,
     ButtonBuilder,
-    time, userMention, roleMention, quote, hyperlink
+    time, userMention, roleMention, hyperlink, blockQuote
 } = require('discord.js');
 const {TextInputStyle, ButtonStyle} = require("discord-api-types/v10");
 const {Event, EventSignup} = require("../models");
+
+const categories = {
+    'accept': '<:Accept:1009511793913249812> Accept',
+    'decline': '<:Deny:1009512341324443899> Decline',
+    'commander': '<:Commander:1009174334109126686> Commander',
+    'infantry': '<:Inf:1009174335535202414> Infantry',
+    'tank': '<:TankCrew:1009174343701504051> Tank',
+    'recon': '<:Sniper:1009174339511394456> Recon',
+    'arty': '<:Artillery:1009174331424776292> Artillery'
+}
+
 
 function formatSignups(signups, type) {
     const signupsOfType = signups.filter(signup => signup.type === type);
@@ -17,7 +28,25 @@ function formatSignups(signups, type) {
         return '-';
     }
 
-    return quote(signupsOfType.map(signup => userMention(signup.discordId)).join('\n'));
+    const signupList = blockQuote(signupsOfType.map(signup => userMention(signup.discordId)).join('\n'));
+    const splitPos = signupList.lastIndexOf("\n", 1024);
+    const hasToBeSplit = signupList.length > 1024 && splitPos !== -1
+
+    let fields = [{
+        inline: true,
+        name: `${categories[type]} (${signupCount(signups, type)})`,
+        value: hasToBeSplit ? signupList.substring(0, splitPos) : signupList
+    }];
+
+    if (hasToBeSplit) {
+        fields.push({
+            inline: true,
+            name: `​`,
+            value: signupList.substring(splitPos + 2)
+        });
+    }
+
+    return fields;
 }
 
 function signupCount(signups, type) {
@@ -31,50 +60,18 @@ async function getEventEmbed(model) {
     switch (model.options) {
         case 'signup_generic':
             fields = [
-                {
-                    inline: true,
-                    name: `<:Accept:1009511793913249812> Accept (${signupCount(signups, 'accept')})`,
-                    value: formatSignups(signups, 'accept')
-                },
-                {
-                    inline: true,
-                    name: `<:Deny:1009512341324443899> Decline (${signupCount(signups, 'decline')})`,
-                    value: formatSignups(signups, 'decline')
-                }
+                ...formatSignups(signups, 'accept'),
+                ...formatSignups(signups, 'decline')
             ];
             break;
         case 'signup_categories':
             fields = [
-                {
-                    inline: true,
-                    name: `<:Commander:1009174334109126686> Commander (${signupCount(signups, 'commander')})`,
-                    value: formatSignups(signups, 'commander')
-                },
-                {
-                    inline: true,
-                    name: `<:Inf:1009174335535202414> Infantry (${signupCount(signups, 'infantry')})`,
-                    value: formatSignups(signups, 'infantry')
-                },
-                {
-                    inline: true,
-                    name: `<:TankCrew:1009174343701504051> Tank (${signupCount(signups, 'tank')})`,
-                    value: formatSignups(signups, 'tank')
-                },
-                {
-                    inline: true,
-                    name: `<:Sniper:1009174339511394456> Recon (${signupCount(signups, 'recon')})`,
-                    value: formatSignups(signups, 'recon')
-                },
-                {
-                    inline: true,
-                    name: `<:Artillery:1009174331424776292> Artillery (${signupCount(signups, 'arty')})`,
-                    value: formatSignups(signups, 'arty')
-                },
-                {
-                    inline: true,
-                    name: `<:Deny:1009512341324443899> Decline (${signupCount(signups, 'decline')})`,
-                    value: formatSignups(signups, 'decline')
-                }
+                ...formatSignups(signups, 'commander'),
+                ...formatSignups(signups, 'infantry'),
+                ...formatSignups(signups, 'tank'),
+                ...formatSignups(signups, 'recon'),
+                ...formatSignups(signups, 'arty'),
+                ...formatSignups(signups, 'decline')
             ];
             break;
     }
@@ -84,7 +81,10 @@ async function getEventEmbed(model) {
         .setDescription(`${time(model.eventDate, 'F')}\n\n${model.description}`)
         .setFields(
             {name: 'Attendee role', value: roleMention(model.attendeeRole)},
-            {name: 'Links', value: hyperlink('Add to Google Calendar', `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(model.name)}&details=&location=&dates=${new Date(model.eventDate.getTime()).toISOString().replace(/[^\w\s]/gi, '')}/${new Date(model.eventDate.getTime() + 90*60000).toISOString().replace(/[^\w\s]/gi, '')}`)},
+            {
+                name: 'Links',
+                value: hyperlink('Add to Google Calendar', `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(model.name)}&details=&location=&dates=${new Date(model.eventDate.getTime()).toISOString().replace(/[^\w\s]/gi, '')}/${new Date(model.eventDate.getTime() + 90 * 60000).toISOString().replace(/[^\w\s]/gi, '')}`)
+            },
             ...fields
         );
 }
