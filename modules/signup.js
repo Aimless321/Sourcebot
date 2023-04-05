@@ -28,7 +28,7 @@ function formatSignups(signups, type) {
         return '-';
     }
 
-    const signupList = blockQuote(signupsOfType.map(signup => userMention(signup.discordId)).join('\n'));
+    const signupList = signupsOfType.map(signup => userMention(signup.discordId)).join('\n');
     const splitPos = signupList.lastIndexOf("\n", 1024);
     const hasToBeSplit = signupList.length > 1024 && splitPos !== -1
 
