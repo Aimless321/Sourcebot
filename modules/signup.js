@@ -35,7 +35,7 @@ function formatSignups(signups, type) {
     let fields = [{
         inline: true,
         name: `${categories[type]} (${signupCount(signups, type)})`,
-        value: hasToBeSplit ? signupList.substring(0, splitPos) : signupList
+        value: blockQuote(hasToBeSplit ? signupList.substring(0, splitPos) : signupList)
     }];
 
     if (hasToBeSplit) {
