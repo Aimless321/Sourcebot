@@ -46,8 +46,8 @@ module.exports = {
                 });
             });
 
-            const confirmationChannel = client.channels.fetch(roleNotificationConfirmationChannel);
-            confirmationChannel.send({
+            const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
+            await confirmationChannel.send({
                 embeds: [{
                     title: "Sent sign up reminders",
                     description: `${remindersSent} reminders sent for ${event.name} (${hoursTillEvent} hours till event)`,
