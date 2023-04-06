@@ -53,7 +53,7 @@ module.exports = {
             });
 
             const memberList = membersWithoutReply.map(member => `${member.toString()} (${member.displayName})`).join('\n');
-            const splitPos = memberList.lastIndexOf("\n", 1024);
+            const splitPos = memberList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
             const hasToBeSplit = memberList.length > 1024 && splitPos !== -1
 
             let fields = [{

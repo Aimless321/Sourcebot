@@ -29,7 +29,7 @@ function formatSignups(signups, type) {
     }
 
     const signupList = signupsOfType.map(signup => userMention(signup.discordId)).join('\n');
-    const splitPos = signupList.lastIndexOf("\n", 1024);
+    const splitPos = signupList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
     const hasToBeSplit = signupList.length > 1024 && splitPos !== -1
 
     let fields = [{
