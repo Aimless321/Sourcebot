@@ -25,6 +25,8 @@ module.exports = {
             const mandatoryRole = await channel.guild.roles.fetch(mandatorySignupRole, {force: true});
             const members = mandatoryRole.members;
 
+            console.log(`Found ${members.size} mandatory signup members`);
+
             const embed = new EmbedBuilder()
                 .setTitle('The Circle - Signup reminder')
                 .setDescription(`
