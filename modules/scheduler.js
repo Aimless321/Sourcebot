@@ -5,7 +5,7 @@ const {
     roleNotificationConfirmationChannel,
     recruitmentAdminChannel
 } = require("../config.json");
-const {EmbedBuilder, time, roleMention} = require("discord.js");
+const {EmbedBuilder, time, roleMention, userMention, blockQuote} = require("discord.js");
 const {removeSignUpForm} = require("./signup");
 
 module.exports = {
@@ -36,24 +36,47 @@ module.exports = {
                 );
 
             let remindersSent = 0;
+            const membersWithoutReply = [];
             members.forEach(member => {
                 if (repliedBy.includes(member.id) || member.user.bot) {
                     return;
                 }
 
+                membersWithoutReply.push(member);
+
                 member.send({embeds: [embed]}).then(() => {
                     remindersSent++;
+                    console.log('Reminder sent to', member.displayName);
                 }).catch(() => {
                     console.error('Cannot send DM to', member.displayName);
                 });
             });
+
+            const memberList = membersWithoutReply.map(signup => userMention(signup.discordId)).join('\n');
+            const splitPos = memberList.lastIndexOf("\n", 1024);
+            const hasToBeSplit = memberList.length > 1024 && splitPos !== -1
+
+            let fields = [{
+                inline: true,
+                name: `Members that haven't replied (${membersWithoutReply.length})`,
+                value: blockQuote(hasToBeSplit ? memberList.substring(0, splitPos) : memberList)
+            }];
+
+            if (hasToBeSplit) {
+                fields.push({
+                    inline: true,
+                    name: `​`,
+                    value: blockQuote(memberList.substring(splitPos + 1))
+                });
+            }
 
             const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
             await confirmationChannel.send({
                 embeds: [{
                     title: "Sent sign up reminders",
                     description: `${remindersSent} reminders sent for ${event.name} (${hoursTillEvent} hours till event)`,
-                    color: 501760
+                    color: 501760,
+                    fields
                 }]
             });
         }
