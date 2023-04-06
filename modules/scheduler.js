@@ -52,7 +52,7 @@ module.exports = {
                 });
             });
 
-            const memberList = membersWithoutReply.map(signup => userMention(signup.discordId)).join('\n');
+            const memberList = membersWithoutReply.map(member => `${member.toString()} (${member.displayName})`).join('\n');
             const splitPos = memberList.lastIndexOf("\n", 1024);
             const hasToBeSplit = memberList.length > 1024 && splitPos !== -1
 
