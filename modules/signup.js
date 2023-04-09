@@ -320,17 +320,17 @@ module.exports = {
 
             if (model.attendeeRole) {
                 const role = message.guild.roles.cache.get(model.attendeeRole);
-                await message.guild.roles.create({
-                    data: {
-                        name: role.name,
+                const data = {
+                    name: role.name,
                         color: role.color,
                         hoist: role.hoist,
                         position: role.position,
                         permissions: role.permissions,
                         mentionable: role.mentionable
-                    }
-                });
+                };
+
                 await role.delete('Emptying role');
+                await message.guild.roles.create({data});
             }
 
             await message.delete();
