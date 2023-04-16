@@ -25,7 +25,7 @@ const categories = {
 function formatSignups(signups, type) {
     const signupsOfType = signups.filter(signup => signup.type === type);
     if (signupsOfType.length === 0) {
-        return {name: `${categories[type]} (${signupCount(signups, type)})`, value: '-'};
+        return [{name: `${categories[type]} (${signupCount(signups, type)})`, value: '-'}];
     }
 
     const signupList = signupsOfType.map(signup => userMention(signup.discordId)).join('\n');
