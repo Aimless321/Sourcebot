@@ -25,11 +25,11 @@ const categories = {
 function formatSignups(signups, type) {
     const signupsOfType = signups.filter(signup => signup.type === type);
     if (signupsOfType.length === 0) {
-        return '-';
+        return {name: `${categories[type]} (${signupCount(signups, type)})`, value: '-'};
     }
 
     const signupList = signupsOfType.map(signup => userMention(signup.discordId)).join('\n');
-    const splitPos = signupList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+    const splitPos = signupList.lastIndexOf("\n", 1024 - 24); // Split at less than 1024 for formatting purposes
     const hasToBeSplit = signupList.length > 1024 && splitPos !== -1
 
     let fields = [{
@@ -322,11 +322,11 @@ module.exports = {
                 const role = message.guild.roles.cache.get(model.attendeeRole);
                 const data = {
                     name: role.name,
-                        color: role.color,
-                        hoist: role.hoist,
-                        position: role.position,
-                        permissions: role.permissions,
-                        mentionable: role.mentionable
+                    color: role.color,
+                    hoist: role.hoist,
+                    position: role.position,
+                    permissions: role.permissions,
+                    mentionable: role.mentionable
                 };
 
                 await role.delete('Emptying role');
