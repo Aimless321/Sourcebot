@@ -2,7 +2,7 @@ const {
     SlashCommandBuilder,
 } = require('discord.js');
 const {adminRoleId} = require("../config.json");
-const {createNewSignUp, removeSignUpForm} = require("../modules/signup");
+const {createNewSignUp, removeSignUpForm, sendRemindersForEvent} = require("../modules/signup");
 const {Event} = require("../models");
 
 
@@ -26,6 +26,16 @@ async function deleteSignup(interaction) {
     return interaction.reply({ephemeral: true, content: `Signup for ${eventModel.name} removed`});
 }
 
+async function remindForEvent(interaction) {
+    const eventName = interaction.options.getString('event');
+    const eventModel = await Event.findOne({where: {name: eventName}});
+    if (!eventModel) {
+        return interaction.reply({ephemeral: true, content: `Can't find event with name: ${eventModel.name}`});
+    }
+
+    await sendRemindersForEvent(interaction.client, eventModel);
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('signup')
@@ -43,6 +53,18 @@ module.exports = {
                     option
                         .setName('event')
                         .setDescription('The event to remove')
+                        .setRequired(true)
+                        .setAutocomplete(true)
+                )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('remind')
+                .setDescription('Remind the required role about an event')
+                .addStringOption(option =>
+                    option
+                        .setName('event')
+                        .setDescription('The event to remind about')
                         .setRequired(true)
                         .setAutocomplete(true)
                 )
@@ -66,6 +88,8 @@ module.exports = {
                 return await createSignup(interaction);
             case 'delete':
                 return await deleteSignup(interaction);
+            case 'remind':
+                return await remindForEvent(interaction);
         }
 
         return interaction.reply({content: 'Invalid command, use one of the subcommands', ephemeral: true});

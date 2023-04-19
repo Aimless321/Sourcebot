@@ -10,6 +10,7 @@ const {
 } = require('discord.js');
 const {TextInputStyle, ButtonStyle} = require("discord-api-types/v10");
 const {Event, EventSignup} = require("../models");
+const {mandatorySignupRole, roleNotificationConfirmationChannel} = require("../config.json");
 
 const categories = {
     'accept': '<:Accept:1009511793913249812> Accept',
@@ -348,5 +349,72 @@ module.exports = {
         const embed = await getEventEmbed(model);
 
         await interaction.message.edit({embeds: [embed]});
+    },
+    async sendRemindersForEvent(client, event) {
+        const repliedBy = (await event.getEventSignups()).map(signup => signup.discordId);
+        const channel = await client.channels.fetch(event.channelId);
+        const message = await channel.messages.fetch(event.messageId);
+        const mandatoryRole = await channel.guild.roles.fetch(mandatorySignupRole, {force: true});
+        const members = mandatoryRole.members;
+
+        console.log(`Found ${members.size} mandatory signup members`);
+
+        const embed = new EmbedBuilder()
+            .setTitle('The Circle - Signup reminder')
+            .setDescription(`
+                    We ask all of our comp members to reply to all matches, even if you can't make it to the event.
+                    
+                    Please reply to [${event.name}](${message.url}) - ${time(event.eventDate, 'F')}`
+            );
+
+        let remindersSent = 0;
+        const membersWithoutReply = [];
+        const messages = [];
+        members.forEach(member => {
+            if (repliedBy.includes(member.id) || member.user.bot) {
+                return;
+            }
+
+            membersWithoutReply.push(member);
+
+            const message = member.send({embeds: [embed]}).then(() => {
+                remindersSent++;
+                console.log('Reminder sent to', member.displayName);
+            }).catch(() => {
+                console.error('Cannot send DM to', member.displayName);
+            });
+
+            messages.push(message);
+        });
+
+        await Promise.all(messages);
+
+        const memberList = membersWithoutReply.map(member => `${member.toString()} (${member.displayName})`).join('\n');
+        const splitPos = memberList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+        const hasToBeSplit = memberList.length > 1024 && splitPos !== -1
+
+        let fields = [{
+            inline: true,
+            name: `Members that haven't replied (${membersWithoutReply.length})`,
+            value: blockQuote(hasToBeSplit ? memberList.substring(0, splitPos) : memberList)
+        }];
+
+        if (hasToBeSplit) {
+            fields.push({
+                inline: true,
+                name: `​`,
+                value: blockQuote(memberList.substring(splitPos + 1))
+            });
+        }
+
+        const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
+        await confirmationChannel.send({
+            embeds: [{
+                title: "Sent sign up reminders",
+                description: `${remindersSent} reminders sent for ${event.name} (${hoursTillEvent} hours till event)`,
+                color: 501760,
+                fields
+            }]
+        });
     }
 }
