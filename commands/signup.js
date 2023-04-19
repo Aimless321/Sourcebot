@@ -33,7 +33,10 @@ async function remindForEvent(interaction) {
         return interaction.reply({ephemeral: true, content: `Can't find event with name: ${eventModel.name}`});
     }
 
+    await interaction.deferReply();
+
     await sendRemindersForEvent(interaction.client, eventModel);
+    return interaction.reply('Signups sent');
 }
 
 module.exports = {
