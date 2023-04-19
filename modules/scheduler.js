@@ -15,7 +15,7 @@ module.exports = {
         for (let event of events) {
             const hoursTillEvent = Math.floor(((event.eventDate - new Date()) / (1000 * 60 * 60)) - .6);
 
-            if (hoursTillEvent !== 3 * 24 && hoursTillEvent !== 2 * 24 && hoursTillEvent !== 24) {
+            if (hoursTillEvent !== 5 * 24 && hoursTillEvent !== 3 * 24 && hoursTillEvent !== 24) {
                 continue;
             }
 
