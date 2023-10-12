@@ -293,7 +293,7 @@ async function postEventMessage(channel, eventModel) {
 
 function formatListToFields(list, title, formatFunction) {
     const formattedList = list.map(x => formatFunction(x)).join('\n');
-    const splitPos = formattedList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+    let splitPos = formattedList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
     const hasToBeSplit = formattedList.length > 1024 && splitPos !== -1
 
     let fields = [{
@@ -302,12 +302,20 @@ function formatListToFields(list, title, formatFunction) {
         value: blockQuote(hasToBeSplit ? formattedList.substring(0, splitPos) : formattedList)
     }];
 
-    if (hasToBeSplit) {
+    if (!hasToBeSplit)
+        return fields;
+
+    let remainder = formattedList.substring(splitPos + 1);
+    while (remainder.length > 1024) {
+        splitPos = remainder.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+
         fields.push({
             inline: true,
             name: `​`,
-            value: blockQuote(formattedList.substring(splitPos + 1))
+            value: blockQuote(remainder.substring(0, splitPos))
         });
+
+        remainder = remainder.substring(splitPos + 1);
     }
 
     return fields;
