@@ -291,6 +291,36 @@ async function postEventMessage(channel, eventModel) {
     return await channel.send({content: mentions, embeds: [embed], components: buttons});
 }
 
+function formatListToFields(list, title, formatFunction) {
+    const formattedList = list.map(x => formatFunction(x)).join('\n');
+    const splitPos = formattedList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+    const hasToBeSplit = formattedList.length > 1024 && splitPos !== -1
+
+    let fields = [{
+        inline: true,
+        name: title,
+        value: blockQuote(hasToBeSplit ? formattedList.substring(0, splitPos) : formattedList)
+    }];
+
+    if (hasToBeSplit) {
+        fields.push({
+            inline: true,
+            name: `​`,
+            value: blockQuote(formattedList.substring(splitPos + 1))
+        });
+    }
+
+    return fields;
+}
+
+async function getMembersThatHaveNotReplied(guild, event) {
+    const repliedBy = (await event.getEventSignups()).map(signup => signup.discordId);
+    const mandatoryRole = await guild.roles.fetch(mandatorySignupRole, {force: true});
+    const members = mandatoryRole.members;
+
+    return members.filter(member => !repliedBy.includes(member.id) && !member.user.bot);
+}
+
 module.exports = {
     async createNewSignUp(interaction) {
         const [interaction2, eventModel] = await collectEventDetails(interaction);
@@ -350,12 +380,10 @@ module.exports = {
 
         await interaction.message.edit({embeds: [embed]});
     },
-    async sendRemindersForEvent(client, event) {
-        const repliedBy = (await event.getEventSignups()).map(signup => signup.discordId);
+    async sendRemindersForEvent(client, event, hoursTillEvent) {
         const channel = await client.channels.fetch(event.channelId);
         const message = await channel.messages.fetch(event.messageId);
-        const mandatoryRole = await channel.guild.roles.fetch(mandatorySignupRole, {force: true});
-        const members = mandatoryRole.members;
+        const members = await getMembersThatHaveNotReplied(message.guild, event);
 
         console.log(`Found ${members.size} mandatory signup members`);
 
@@ -368,44 +396,39 @@ module.exports = {
             );
 
         let remindersSent = 0;
-        const membersWithoutReply = [];
+        const successfulReminders = [];
+        const failedReminders = [];
         const messages = [];
         members.forEach(member => {
-            if (repliedBy.includes(member.id) || member.user.bot) {
-                return;
-            }
-
-            membersWithoutReply.push(member);
-
             const message = member.send({embeds: [embed]}).then(() => {
                 remindersSent++;
                 console.log('Reminder sent to', member.displayName);
+                successfulReminders.push(member);
             }).catch(() => {
                 console.error('Cannot send DM to', member.displayName);
+                failedReminders.push(member);
             });
 
             messages.push(message);
         });
-
         await Promise.all(messages);
 
-        const memberList = membersWithoutReply.map(member => `${member.toString()} (${member.displayName})`).join('\n');
-        const splitPos = memberList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
-        const hasToBeSplit = memberList.length > 1024 && splitPos !== -1
-
-        let fields = [{
+        const formatFunction = member => `${member.toString()} (${member.displayName})`;
+        const fields = formatListToFields(
+            successfulReminders,
+            `Sent DMs to: (${successfulReminders.length})`,
+            formatFunction
+        );
+        fields.push({
             inline: true,
-            name: `Members that haven't replied (${membersWithoutReply.length})`,
-            value: blockQuote(hasToBeSplit ? memberList.substring(0, splitPos) : memberList)
-        }];
-
-        if (hasToBeSplit) {
-            fields.push({
-                inline: true,
-                name: `​`,
-                value: blockQuote(memberList.substring(splitPos + 1))
-            });
-        }
+            name: `​`,
+            value: '​'
+        });
+        fields.push(...formatListToFields(
+            failedReminders,
+            `Couldn't send DMs to: (${failedReminders.length})`,
+            formatFunction
+        ));
 
         const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
         await confirmationChannel.send({
@@ -415,6 +438,11 @@ module.exports = {
                 color: 501760,
                 fields
             }]
+        }).catch(error => {
+            console.info('Failed to send signup confirmation');
+            console.error(error);
         });
-    }
+    },
+    formatListToFields,
+    getMembersThatHaveNotReplied
 }

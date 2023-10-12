@@ -19,7 +19,7 @@ module.exports = {
                 continue;
             }
 
-            await sendRemindersForEvent(client, event);
+            await sendRemindersForEvent(client, event, hoursTillEvent);
         }
     },
     async cleanUpEvents(client) {
