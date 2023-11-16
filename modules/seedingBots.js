@@ -73,16 +73,6 @@ function getSeedingButtons(disabled) {
                     .setLabel('Server 3')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-cm1')
-                    .setLabel('CM 1')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
-                new ButtonBuilder()
-                    .setCustomId('seed-cm2')
-                    .setLabel('CM 2')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(disabled),
             ),
         new ActionRowBuilder()
             .addComponents(
