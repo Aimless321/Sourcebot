@@ -118,10 +118,10 @@ module.exports = {
     ,
     async autocomplete(interaction) {
         const focusedValue = interaction.options.getFocused();
-        const choices = await Event.findAll({attributes: ['name'], raw: true});
-        const filtered = choices.map(choice => choice.name).filter(choice => choice.startsWith(focusedValue));
+        const choices = await Event.findAll({raw: true});
+        const filtered = choices.filter(choice => choice.name.startsWith(focusedValue));
         await interaction.respond(
-            filtered.map(choice => ({name: choice, value: choice})),
+            filtered.map(choice => ({value: choice.name, name: `${choice.name} (${choice.eventDate.toString()})`})),
         );
     },
     async execute(interaction) {
