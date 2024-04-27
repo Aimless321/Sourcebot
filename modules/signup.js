@@ -101,7 +101,9 @@ function getEventButtons(model) {
                 new ActionRowBuilder()
                     .setComponents(
                         new ButtonBuilder().setEmoji('1009511793913249812').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-accept'),
-                        new ButtonBuilder().setEmoji('1009512341324443899').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-decline'))
+                        new ButtonBuilder().setEmoji('1009512341324443899').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-decline'),
+                        new ButtonBuilder().setLabel('Edit').setStyle(ButtonStyle.Primary).setCustomId('event-signup-edit')
+                    )
             ];
         case 'signup_categories':
             return [
@@ -115,7 +117,8 @@ function getEventButtons(model) {
                     .setComponents(
                         new ButtonBuilder().setEmoji('1009174339511394456').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-recon'),
                         new ButtonBuilder().setEmoji('1009174331424776292').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-arty'),
-                        new ButtonBuilder().setEmoji('1009512341324443899').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-decline')
+                        new ButtonBuilder().setEmoji('1009512341324443899').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-decline'),
+                        new ButtonBuilder().setLabel('Edit').setStyle(ButtonStyle.Primary).setCustomId('event-signup-edit')
                     )
             ];
         default:
@@ -293,7 +296,7 @@ async function postEventMessage(channel, eventModel) {
 
 function formatListToFields(list, title, formatFunction) {
     const formattedList = list.map(x => formatFunction(x)).join('\n');
-    let splitPos = formattedList.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+    let splitPos = formattedList.lastIndexOf("\n", 1024 - 24); // Split at less than 1024 for formatting purposes
     const hasToBeSplit = formattedList.length > 1024 && splitPos !== -1
 
     let fields = [{
@@ -307,7 +310,7 @@ function formatListToFields(list, title, formatFunction) {
 
     let remainder = formattedList.substring(splitPos + 1);
     while (remainder.length > 1024) {
-        splitPos = remainder.lastIndexOf("\n", 1024-24); // Split at less than 1024 for formatting purposes
+        splitPos = remainder.lastIndexOf("\n", 1024 - 24); // Split at less than 1024 for formatting purposes
 
         fields.push({
             inline: true,
@@ -348,7 +351,58 @@ module.exports = {
         eventModel.messageId = message.id;
         await eventModel.save();
 
+        await message.startThread({name: 'Signup Log'});
+
         return await interaction4.reply({ephemeral: true, content: 'Event created'});
+    },
+    async editSignUp(interaction, model) {
+        const modal = new ModalBuilder()
+            .setCustomId('new-signup-modal')
+            .setTitle('Edit sign up');
+
+        const titleInput = new TextInputBuilder()
+            .setCustomId('new-signup-title')
+            .setLabel("Title")
+            .setStyle(TextInputStyle.Short)
+            .setValue(model.name);
+
+        const dateInput = new TextInputBuilder()
+            .setCustomId('new-signup-date')
+            .setLabel("Date and time")
+            .setStyle(TextInputStyle.Short)
+            .setValue(model.eventDate.toString());
+
+        const descriptionInput = new TextInputBuilder()
+            .setCustomId('new-signup-description')
+            .setLabel("Description")
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(model.description);
+
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(titleInput),
+            new ActionRowBuilder().addComponents(dateInput),
+            new ActionRowBuilder().addComponents(descriptionInput)
+        );
+
+        await interaction.showModal(modal);
+
+        return interaction.awaitModalSubmit({time: 300_000})
+            .then(async interaction => {
+                const title = interaction.fields.getTextInputValue('new-signup-title');
+                const date = interaction.fields.getTextInputValue('new-signup-date');
+                const description = stripquotes(interaction.fields.getTextInputValue('new-signup-description'));
+
+                model.name = title;
+                model.eventDate = date;
+                model.description = description;
+                await model.save();
+
+                const embed = await getEventEmbed(model);
+                await interaction.message.edit({embeds: [embed]});
+
+                return interaction.reply({content: 'Updated event details', ephemeral: true});
+            })
+            .catch(console.error);
     },
     async removeSignUpForm(model, client) {
         await model.destroy();
