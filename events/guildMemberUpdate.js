@@ -91,11 +91,12 @@ module.exports = {
                         }
                     });
                 });
-            }).catch(() => {
+            }).catch(err => {
+                console.error(err);
                 confirmationChannel.send({
                     embeds: [{
                         title: "Failed to send role update message",
-                        description: `Cannot send message to ${newMember.toString()} for ${roleName}`,
+                        description: `Cannot send message to ${newMember.toString()} for ${role.toString()}`,
                         color: 16711680
                     }]
                 });
