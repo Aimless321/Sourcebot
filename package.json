@@ -2,23 +2,27 @@
   "name": "discord-bot",
   "version": "1.0.0",
   "description": "Clan discord bot",
-  "main": "index.js",
+  "main": "src/index.js",
   "author": "Aimless321",
   "license": "ISC",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsup src/index.ts --minify"
+  },
   "dependencies": {
-    "@discordjs/rest": "^1.6.0",
-    "@discordjs/voice": "^0.11.0",
-    "@waylaidwanderer/chatgpt-api": "^1.33.2",
-    "better-logging": "^5.0.0",
-    "compromise": "^14.8.2",
-    "discord-api-types": "^0.37.37",
-    "discord.js": "^14.8.0",
-    "node-cron": "^3.0.2",
-    "node-fetch-native": "^0.1.8",
-    "sequelize": "^6.30.0",
-    "sqlite3": "^5.1.6"
+    "@discordjs/rest": "^2.4.2",
+    "discord-api-types": "^0.37.119",
+    "discord.js": "^14.17.3",
+    "node-cron": "^3.0.3",
+    "openai": "^4.83.0",
+    "sequelize": "^6.37.5",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "sequelize-cli": "^6.6.0"
+    "sequelize-cli": "^6.6.0",
+    "tsup": "^8.3.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }
