@@ -10,7 +10,7 @@ async function execute(interaction, progress) {
 
     const admin = await getAdmin(interaction.guild, model, progress)
     if (!admin) {
-        await interaction.reply({ephemeral: true, content: 'All votes received, thanks for voting'});
+        await interaction.reply({flags: MessageFlags.Ephemeral, content: 'All votes received, thanks for voting'});
         return;
     }
 

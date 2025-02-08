@@ -9,7 +9,7 @@ async function execute(interaction) {
 
     if (selectedOption === 'edit') {
         if (!interaction.member.roles.cache.has(adminRoleId)) {
-            return interaction.reply({content: 'You don\'t have permission for this command', ephemeral: true})
+            return interaction.reply({content: 'You don\'t have permission for this command', flags: MessageFlags.Ephemeral})
         }
 
         return editSignUp(interaction, eventModel);
@@ -35,7 +35,7 @@ async function execute(interaction) {
 
     await interaction.message.thread.send({embeds: [updateEmbed]})
 
-    return interaction.reply({ephemeral: true, content: `You've selected ${selectedOption} for ${eventModel.name}`});
+    return interaction.reply({flags: MessageFlags.Ephemeral, content: `You've selected ${selectedOption} for ${eventModel.name}`});
 }
 
 module.exports = {

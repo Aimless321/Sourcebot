@@ -11,8 +11,8 @@ export class RoleNotification extends Model<
     InferCreationAttributes<RoleNotification>
 > {
   declare role: string;
-  declare message: string;
-  declare channel: string;
+  declare message: string | null;
+  declare channel: string | null;
 
   static associate(models: any) {
     // define association here if needed

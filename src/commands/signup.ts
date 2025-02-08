@@ -139,16 +139,9 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    if (!interaction.member) {
-        return interaction.reply({
-            content: 'You need to be in a guild to use this command',
-            flags: MessageFlags.Ephemeral
-        });
-    }
-
     const member = interaction.member as GuildMember;
     if (!member.roles.cache.has(adminRoleId)) {
-        return interaction.reply({content: 'You don\'t have permission for this command', ephemeral: true})
+        return interaction.reply({content: 'You don\'t have permission for this command', flags: MessageFlags.Ephemeral})
     }
 
     switch (interaction.options.getSubcommand()) {
@@ -162,5 +155,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return await showEventStatus(interaction);
     }
 
-    return interaction.reply({content: 'Invalid command, use one of the subcommands', ephemeral: true});
+    return interaction.reply({content: 'Invalid command, use one of the subcommands', flags: MessageFlags.Ephemeral});
 }

@@ -4,8 +4,9 @@ import {
     InferCreationAttributes,
     CreationOptional,
     DataTypes,
-    Sequelize,
+    Sequelize, HasManyGetAssociationsMixin,
 } from 'sequelize';
+import {EventSignup} from "./EventSignup";
 
 export class Event extends Model<
     InferAttributes<Event>,
@@ -14,12 +15,14 @@ export class Event extends Model<
     declare id: CreationOptional<number>;
     declare channelId: string | null;
     declare messageId: string | null;
-    declare name: string | null;
+    declare name: string;
     declare description: string | null;
-    declare eventDate: Date | null;
+    declare eventDate: Date;
     declare attendeeRole: string | null;
-    declare mentionRoles: any;
+    declare mentionRoles: string[];
     declare options: string;
+
+    declare getEventSignups: HasManyGetAssociationsMixin<EventSignup>;
 
     static associate(models: any) {
         Event.hasMany(models.EventSignup, {onDelete: 'CASCADE'});
@@ -36,9 +39,15 @@ export default function initEvent(sequelize: Sequelize) {
             },
             channelId: DataTypes.STRING,
             messageId: DataTypes.STRING,
-            name: DataTypes.STRING,
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
             description: DataTypes.STRING,
-            eventDate: DataTypes.DATE,
+            eventDate: {
+                type: DataTypes.DATE,
+                allowNull: false,
+            },
             attendeeRole: DataTypes.STRING,
             mentionRoles: DataTypes.JSON,
             options: {

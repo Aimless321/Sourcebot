@@ -3,13 +3,14 @@ import {
     InferAttributes,
     InferCreationAttributes,
     DataTypes,
-    Sequelize,
+    Sequelize, CreationOptional,
 } from 'sequelize';
 
 export class Contribution extends Model<
     InferAttributes<Contribution>,
     InferCreationAttributes<Contribution>
 > {
+    declare id: CreationOptional<number>;
     declare discordId: string;
     declare amount: number;
 
@@ -21,6 +22,11 @@ export class Contribution extends Model<
 export default function initContribution(sequelize: Sequelize) {
     Contribution.init(
         {
+            id: {
+                type: DataTypes.INTEGER,
+                autoIncrement: true,
+                primaryKey: true,
+            },
             discordId: {
                 type: DataTypes.STRING,
                 unique: true,

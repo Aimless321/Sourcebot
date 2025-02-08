@@ -1,16 +1,25 @@
-const {
-    EmbedBuilder,
-    ActionRowBuilder,
-    ModalBuilder,
-    TextInputBuilder,
-    StringSelectMenuBuilder,
+import {
+    ActionRowBuilder, blockQuote, ButtonBuilder, CacheType, ChatInputCommandInteraction,
+    EmbedBuilder, hyperlink, MessageComponentInteraction, MessageFlags,
+    ModalBuilder, ModalSubmitInteraction, roleMention,
     RoleSelectMenuBuilder,
-    ButtonBuilder,
-    time, userMention, roleMention, hyperlink, blockQuote
-} = require('discord.js');
-const {TextInputStyle, ButtonStyle} = require("discord-api-types/v10");
-const {Event, EventSignup} = require("../models");
-const {mandatorySignupRole, roleNotificationConfirmationChannel} = require("../../config.json");
+    StringSelectMenuBuilder,
+    TextInputBuilder, time, userMention
+} from "discord.js";
+import {ButtonStyle, TextInputStyle} from "discord-api-types/v10";
+import {mandatorySignupRole, roleNotificationConfirmationChannel} from "../../config.json";
+import {EventSignup} from "../models/EventSignup";
+import {Event} from "../models/Event";
+
+enum SignupCategory {
+    ACCEPT = 'accept',
+    DECLINE = 'decline',
+    COMMANDER = 'commander',
+    INFANTRY = 'infantry',
+    TANK = 'tank',
+    RECON = 'recon',
+    ARTY = 'arty'
+}
 
 const categories = {
     'accept': '<:Accept:1009511793913249812> Accept',
@@ -20,10 +29,9 @@ const categories = {
     'tank': '<:TankCrew:1009174343701504051> Tank',
     'recon': '<:Sniper:1009174339511394456> Recon',
     'arty': '<:Artillery:1009174331424776292> Artillery'
-}
+};
 
-
-function formatSignups(signups, type) {
+function formatSignups(signups: EventSignup[], type: SignupCategory) {
     const signupsOfType = signups.filter(signup => signup.type === type);
     if (signupsOfType.length === 0) {
         return [{name: `${categories[type]} (${signupCount(signups, type)})`, value: '-'}];
@@ -50,29 +58,29 @@ function formatSignups(signups, type) {
     return fields;
 }
 
-function signupCount(signups, type) {
+function signupCount(signups: EventSignup[], type: SignupCategory) {
     return signups.filter(signup => signup.type === type).length;
 }
 
-async function getEventEmbed(model) {
+async function getEventEmbed(model: Event) {
     const signups = await model.getEventSignups();
 
     let fields;
     switch (model.options) {
         case 'signup_generic':
             fields = [
-                ...formatSignups(signups, 'accept'),
-                ...formatSignups(signups, 'decline')
+                ...formatSignups(signups, SignupCategory.ACCEPT),
+                ...formatSignups(signups, SignupCategory.DECLINE)
             ];
             break;
         case 'signup_categories':
             fields = [
-                ...formatSignups(signups, 'commander'),
-                ...formatSignups(signups, 'infantry'),
-                ...formatSignups(signups, 'tank'),
-                ...formatSignups(signups, 'recon'),
-                ...formatSignups(signups, 'arty'),
-                ...formatSignups(signups, 'decline')
+                ...formatSignups(signups, SignupCategory.COMMANDER),
+                ...formatSignups(signups, SignupCategory.INFANTRY),
+                ...formatSignups(signups, SignupCategory.TANK),
+                ...formatSignups(signups, SignupCategory.RECON),
+                ...formatSignups(signups, SignupCategory.ARTY),
+                ...formatSignups(signups, SignupCategory.DECLINE)
             ];
             break;
     }
@@ -81,20 +89,21 @@ async function getEventEmbed(model) {
         .setTitle(model.name)
         .setDescription(`${time(model.eventDate, 'F')}\n\n${model.description}`)
         .setFields(
-            {name: 'Attendee role', value: roleMention(model.attendeeRole)},
+            model.attendeeRole ? {name: 'Attendee role', value: roleMention(model.attendeeRole)} : {},
             {
                 name: 'Links',
                 value: hyperlink('Add to Google Calendar', `http://www.google.com/calendar/event?action=TEMPLATE&text=${encodeURIComponent(model.name)}&details=&location=&dates=${new Date(model.eventDate.getTime()).toISOString().replace(/[^\w\s]/gi, '')}/${new Date(model.eventDate.getTime() + 90 * 60000).toISOString().replace(/[^\w\s]/gi, '')}`)
             },
+            // @ts-ignore
             ...fields
         );
 }
 
-function getEventMentions(model) {
+function getEventMentions(model: Event) {
     return model.mentionRoles?.map(roleId => roleMention(roleId)).join(' ');
 }
 
-function getEventButtons(model) {
+function getEventButtons(model: Event) {
     switch (model.options) {
         case 'signup_generic':
             return [
@@ -126,7 +135,7 @@ function getEventButtons(model) {
     }
 }
 
-async function collectEventDetails(interaction) {
+async function collectEventDetails(interaction: ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, boolean]> {
     const modal = new ModalBuilder()
         .setCustomId('new-signup-modal')
         .setTitle('Create a new sign up');
@@ -160,7 +169,7 @@ async function collectEventDetails(interaction) {
             const date = interaction.fields.getTextInputValue('new-signup-date');
             const description = stripquotes(interaction.fields.getTextInputValue('new-signup-description'));
 
-            return [interaction, Event.build({name: title, eventDate: date, description})];
+            return [interaction, Event.build({name: title, eventDate: new Date(date), description})];
         })
         .catch(console.error);
 
@@ -211,7 +220,7 @@ async function collectSignUpInfo(interaction, model) {
 
     const message = await interaction.reply({
         content: 'Please specify additional sign up details',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         components: [attendeeSelect, mentionSelect, optionsSelect, buttonRow],
         embeds: [embed],
         fetchReply: true
@@ -270,14 +279,14 @@ async function confirmInfo(interaction, model) {
     );
 
     const message = await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         embeds: [eventEmbed],
         components: [confirmButtons],
         fetchReply: true
     });
 
     return message.awaitMessageComponent({time: 300_000})
-        .then(interaction => {
+        .then((interaction: MessageComponentInteraction) => {
             return [interaction, interaction.customId === 'signup-create-confirm'];
         }).catch(() => {
             console.log('Confirmation expired');
@@ -333,7 +342,7 @@ async function getMembersThatHaveNotReplied(guild, event) {
 }
 
 module.exports = {
-    async createNewSignUp(interaction) {
+    async createNewSignUp(interaction: ChatInputCommandInteraction) {
         const [interaction2, eventModel] = await collectEventDetails(interaction);
 
 
@@ -343,7 +352,7 @@ module.exports = {
         if (!confirmed) {
             await eventModel.destroy();
 
-            return await interaction4.reply({ephemeral: true, content: 'Event creation cancelled.'});
+            return await interaction4.reply({flags: MessageFlags.Ephemeral, content: 'Event creation cancelled.'});
         }
 
         const message = await postEventMessage(interaction.channel, eventModel);
@@ -353,7 +362,7 @@ module.exports = {
 
         await message.startThread({name: 'Signup Log'});
 
-        return await interaction4.reply({ephemeral: true, content: 'Event created'});
+        return await interaction4.reply({flags: MessageFlags.Ephemeral, content: 'Event created'});
     },
     async editSignUp(interaction, model) {
         const modal = new ModalBuilder()
@@ -400,7 +409,7 @@ module.exports = {
                 const embed = await getEventEmbed(model);
                 await interaction.message.edit({embeds: [embed]});
 
-                return interaction.reply({content: 'Updated event details', ephemeral: true});
+                return interaction.reply({content: 'Updated event details', flags: MessageFlags.Ephemeral});
             })
             .catch(console.error);
     },

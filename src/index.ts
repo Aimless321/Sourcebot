@@ -17,7 +17,8 @@ const client = new Client({
 });
 
 for (const event of events) {
-    if (event.once) {
+    // @ts-ignore
+    if (event?.once) {
         // @ts-ignore
         client.once(event.name, (...args) => event.execute(...args));
     } else {
