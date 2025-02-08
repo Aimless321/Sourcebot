@@ -2,7 +2,7 @@
   "name": "discord-bot",
   "version": "1.0.0",
   "description": "Clan discord bot",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "author": "Aimless321",
   "license": "ISC",
   "scripts": {
@@ -17,9 +17,11 @@
     "node-cron": "^3.0.3",
     "openai": "^4.83.0",
     "sequelize": "^6.37.5",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "tslog": "^4.9.3"
   },
   "devDependencies": {
+    "@types/node-cron": "^3.0.11",
     "sequelize-cli": "^6.6.0",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",

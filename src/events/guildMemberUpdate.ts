@@ -1,8 +1,9 @@
-const {RoleNotification, Recruit} = require("../models");
-const {roleNotificationConfirmationChannel, timeoutRoleId, recruitRoleId} = require("../../config.json");
-const {generateRecruitWelcome, generateMemberWelcome} = require("../modules/AIReply");
+import db from "../models";
+import {recruitRoleId, roleNotificationConfirmationChannel, timeoutRoleId} from "../../config.json";
+import {generateMemberWelcome, generateRecruitWelcome} from "../modules/welcomeMessage";
+import {GuildMember} from "discord.js";
 
-async function handleTimeout(member) {
+async function handleTimeout(member: GuildMember) {
     await member.roles.remove(timeoutRoleId);
     // Timeout for 5 minutes
     try {
@@ -13,13 +14,15 @@ async function handleTimeout(member) {
     }
 }
 
-module.exports = {
+export default {
     name: 'guildMemberUpdate',
-    async execute(oldMember, newMember) {
+    async execute(oldMember: GuildMember, newMember: GuildMember) {
         const oldRoles = oldMember.roles.cache;
         const newRoles = newMember.roles.cache;
         const roleDiff = newMember.roles.cache.difference(oldRoles);
         const newIds = roleDiff.map(role => role.id);
+
+        const {Recruit, RoleNotification} = db;
 
         // Member added to recruits
         if (!oldRoles.has(recruitRoleId) && newRoles.has(recruitRoleId)) {

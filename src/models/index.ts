@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Sequelize, DataTypes } from 'sequelize';
-import configFile from '../config/config.json';
+import configFile from '../../config.json';
 
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = (configFile as any)[env];
+const config = (configFile as any)['db'][env];
 
 let sequelize: Sequelize;
 if (config.use_env_variable) {

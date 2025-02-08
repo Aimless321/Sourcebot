@@ -1,8 +1,9 @@
-const {token} = require("../../config.json");
+import {token} from "../../config.json";
+import {Client} from "discord.js";
 
-module.exports = {
+export default {
     name: 'disconnect',
-    async execute(client) {
+    async execute(client: Client) {
         console.error(`Bot disconnected, trying to reconnect.`);
         await client.login(token);
     },

@@ -1,8 +1,10 @@
-const {VCGenerator, VC} = require('../models');
-const {ChannelType} = require("discord-api-types/v10");
-const {musicBotId} = require("../../config.json");
+import {VoiceState} from "discord.js";
+import {ChannelType} from "discord-api-types/v10";
+import {musicBotId} from "../../config.json";
+import db from "../models";
 
-async function removeEmptyVC(oldState, newState) {
+
+async function removeEmptyVC(oldState: VoiceState, newState: VoiceState) {
     const channel = await VC.findByPk(oldState.channelId);
     if (channel === null) {
         return;
@@ -16,7 +18,8 @@ async function removeEmptyVC(oldState, newState) {
     }
 }
 
-async function createNewVC(oldState, newState) {
+async function createNewVC(oldState: VoiceState, newState: VoiceState) {
+    const {VC, VCGenerator} = db;
     const channel = await VCGenerator.findByPk(newState.channelId);
     if (channel === null) {
         return;
@@ -36,12 +39,13 @@ async function createNewVC(oldState, newState) {
     await vcModel.save();
 }
 
-async function changeAudioQuality(oldState, newState) {
+async function changeAudioQuality(oldState: VoiceState, newState: VoiceState) {
     const member = oldState.member;
     if (member.id !== musicBotId) {
         return;
     }
 
+    const {VC} = db;
     const channel = await VC.findByPk(newState.channelId);
     if (channel === null) {
         return;
@@ -50,9 +54,9 @@ async function changeAudioQuality(oldState, newState) {
     await newState.channel.setBitrate(384000);
 }
 
-module.exports = {
+export default {
     name: 'voiceStateUpdate',
-    async execute(oldState, newState) {
+    async execute(oldState: VoiceState, newState: VoiceState) {
         await removeEmptyVC(oldState, newState);
 
         if (!newState.channelId) {
