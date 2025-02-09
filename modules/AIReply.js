@@ -18,6 +18,30 @@ const clientOptions = {
     debug: false,
 };
 
+/**
+ * Utility backport function: replicate the new "generateChatCompletion"
+ * approach, but using the old library’s sendMessage call.
+ */
+async function generateChatCompletion(systemContent, userContent) {
+    const chatGptClient = new ChatGPTClient(chatGPTApiKey, clientOptions);
+
+    // In @waylaidwanderer/chatgpt-api, you can pass system prompts using the second argument:
+    const response = await chatGptClient.sendMessage(userContent.trim(), {
+        systemMessage: systemContent.trim(),
+        // The library will handle calling the model with these completion params:
+        completionParams: {
+            temperature: 1.0,
+            top_p: 0.9,
+            presence_penalty: 0.6,
+            frequency_penalty: 0.3,
+            // If you want to override or confirm the model:
+            model: "gpt-4o-mini",
+        },
+    });
+
+    return response.response || "";
+}
+
 module.exports = {
     /**
      * Example message reply function (unchanged from your original code).
@@ -72,30 +96,6 @@ module.exports = {
     },
 
     /**
-     * Utility backport function: replicate the new "generateChatCompletion"
-     * approach, but using the old library’s sendMessage call.
-     */
-    async generateChatCompletion(systemContent, userContent) {
-        const chatGptClient = new ChatGPTClient(chatGPTApiKey, clientOptions);
-
-        // In @waylaidwanderer/chatgpt-api, you can pass system prompts using the second argument:
-        const response = await chatGptClient.sendMessage(userContent.trim(), {
-            systemMessage: systemContent.trim(),
-            // The library will handle calling the model with these completion params:
-            completionParams: {
-                temperature: 1.0,
-                top_p: 0.9,
-                presence_penalty: 0.6,
-                frequency_penalty: 0.3,
-                // If you want to override or confirm the model:
-                model: "gpt-4o-mini",
-            },
-        });
-
-        return response.response || "";
-    },
-
-    /**
      * 1) Welcome message for a new recruit of The Circle
      */
     async generateRecruitWelcome(name) {
@@ -120,7 +120,7 @@ Write a comedic, supportive welcome, reminding them of the big rule,
 and encourage them to sign up for events, choose roles, and use voice channels.
     `;
 
-        return this.generateChatCompletion(systemMessage, userMessage);
+        return generateChatCompletion(systemMessage, userMessage);
     },
 
     /**
@@ -145,7 +145,7 @@ Write a comedic, varied, short message congratulating them for surviving
 artillery, tanks, and voice chat chaos, and officially welcoming them.
     `;
 
-        return this.generateChatCompletion(systemMessage, userMessage);
+        return generateChatCompletion(systemMessage, userMessage);
     },
 
     /**
@@ -173,6 +173,6 @@ They’re not a recruit, but might be interested in The Circle.
 Give them an amusing, friendly welcome with a playful joke about their name.
     `;
 
-        return this.generateChatCompletion(systemMessage, userMessage);
+        return generateChatCompletion(systemMessage, userMessage);
     }
 };
