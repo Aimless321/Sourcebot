@@ -33,9 +33,12 @@ fs.readdirSync(__dirname)
     })
     .forEach((file) => {
         const fullPath = path.join(__dirname, file);
+        console.log('Loading model file =>', file);
+        const mod = require(fullPath);
+        console.log('Exported default =>', mod.default);
+
         // Import the model factory function
-        const modelFactory = require(fullPath).default;
-        // Call it with (sequelize, DataTypes)
+        const modelFactory = mod.default;
         const model = modelFactory(sequelize, DataTypes);
         db[model.name] = model;
     });
