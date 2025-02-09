@@ -29,12 +29,11 @@ async function generateChatCompletion(systemContent: string, userContent: string
     return response.choices[0]?.message?.content ?? '';
 }
 
-export default {
-    /**
-     * Welcome message for a new recruit of The Circle.
-     */
-    async generateRecruitWelcome(name: string): Promise<string> {
-        const systemMessage = `
+/**
+ * Welcome message for a new recruit of The Circle.
+ */
+export async function generateRecruitWelcome(name: string): Promise<string> {
+    const systemMessage = `
 You are a comedic, slightly sassy, but wholesome assistant.
 Your goal: produce short, playful, irreverent welcome messages for The Circle, 
 a competitive Hell Let Loose clan (WWII shooter with 50v50 battles, realistic artillery, and no-nonsense warfare).
@@ -49,20 +48,20 @@ ALWAYS vary your style, references, tone, structure, and jokes so that consecuti
 Be sure it’s funny, fresh, and unique each time.
     `;
 
-        const userMessage = `
+    const userMessage = `
 A new recruit named ${name} just joined.
 Write a comedic, supportive welcome, reminding them of the big rule,
 and encourage them to sign up for events, choose roles, and use voice channels.
 `;
 
-        return generateChatCompletion(systemMessage, userMessage);
-    },
+    return generateChatCompletion(systemMessage, userMessage);
+}
 
-    /**
-     * Welcome message for someone who just passed the recruitment period.
-     */
-    async generateMemberWelcome(name: string): Promise<string> {
-        const systemMessage = `
+/**
+ * Welcome message for someone who just passed the recruitment period.
+ */
+export async function generateMemberWelcome(name: string): Promise<string> {
+    const systemMessage = `
 You are a comedic, sassy, but warm assistant.
 You produce short, playful, irreverent welcome messages for members who just finished recruitment.
 ALWAYS vary your style, references, and jokes from one request to the next:
@@ -74,20 +73,20 @@ ALWAYS vary your style, references, and jokes from one request to the next:
 Inject comedic disclaimers, random pop-culture references, and historical jabs for variety.
     `;
 
-        const userMessage = `
+    const userMessage = `
 ${name} passed recruitment!
 Write a comedic, varied, short message congratulating them for surviving 
 artillery, tanks, and voice chat chaos, and officially welcoming them.
 `;
 
-        return generateChatCompletion(systemMessage, userMessage);
-    },
+    return generateChatCompletion(systemMessage, userMessage);
+}
 
-    /**
-     * Welcome message for someone who just joined The Circle Discord (not a recruit yet).
-     */
-    async generateJoinMessage(name: string): Promise<string> {
-        const systemMessage = `
+/**
+ * Welcome message for someone who just joined The Circle Discord (not a recruit yet).
+ */
+export async function generateJoinMessage(name: string): Promise<string> {
+    const systemMessage = `
 You are a comedic, slightly sassy, but wholesome assistant.
 You produce short, playful, and somewhat irreverent welcome messages for The Circle, 
 a competitive Hell Let Loose clan active in tournaments (ECL Division 1, Seasonal group D).
@@ -102,12 +101,11 @@ Mention that Hell Let Loose is a raw, unforgiving WWII shooter where medics and 
 often overshadow personal safety, but keep it funny, not grim.
     `;
 
-        const userMessage = `
+    const userMessage = `
 ${name} just joined the Discord server.
 They’re not a recruit, but might be interested in The Circle. 
 Give them an amusing, friendly welcome with a playful joke about their name.
 `;
 
-        return generateChatCompletion(systemMessage, userMessage);
-    },
-};
+    return generateChatCompletion(systemMessage, userMessage);
+}
