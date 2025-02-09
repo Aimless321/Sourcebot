@@ -9,3 +9,4 @@ credentials.json
 .idea
 
 package-lock.json
+dist

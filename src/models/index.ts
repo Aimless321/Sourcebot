@@ -22,7 +22,8 @@ interface DB {
 
 const db: DB = {};
 
-fs.readdirSync(__dirname)
+const modelsDir = path.join(__dirname, 'models');
+fs.readdirSync(modelsDir)
     .filter((file) => {
         // Ignore hidden files, this index file, and keep .ts or .js
         return (
@@ -32,10 +33,8 @@ fs.readdirSync(__dirname)
         );
     })
     .forEach((file) => {
-        const fullPath = path.join(__dirname, file);
-        console.log('Loading model file =>', file);
+        const fullPath = path.join(modelsDir, file);
         const mod = require(fullPath);
-        console.log('Exported default =>', mod.default);
 
         // Import the model factory function
         const modelFactory = mod.default;
