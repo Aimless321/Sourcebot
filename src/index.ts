@@ -3,7 +3,8 @@ import {token} from "../config.json";
 import {updateCostOverviews} from "./modules/costs";
 import {cleanUpEvents, sendRecruitNotifications, sendSignupReminders} from "./modules/scheduler";
 import {Client, GatewayIntentBits} from "discord.js";
-import { events } from './events';
+import {events} from './events';
+import logging from "./logging";
 
 const client = new Client({
     intents: [
@@ -20,17 +21,31 @@ for (const event of events) {
     // @ts-ignore
     if (event?.once) {
         // @ts-ignore
-        client.once(event.name, (...args) => event.execute(...args));
+        client.once(event.name, (...args) => {
+            try {
+                // @ts-ignore
+                event.execute(...args)
+            } catch (e) {
+                logging.fatal(e);
+            }
+        });
     } else {
         // @ts-ignore
-        client.on(event.name, (...args) => event.execute(...args));
+        client.on(event.name, (...args) => {
+            try {
+                // @ts-ignore
+                event.execute(...args)
+            } catch (e) {
+                logging.fatal(e);
+            }
+        });
     }
 }
 
-client.login(token).then(() => {
-    cleanUpEvents(client);
-    sendSignupReminders(client);
-    sendRecruitNotifications(client);
+client.login(token).then(async () => {
+    await cleanUpEvents(client);
+    await sendSignupReminders(client);
+    await sendRecruitNotifications(client);
 });
 
 cron.schedule('*/15 * * * *', async () => await updateCostOverviews(client));

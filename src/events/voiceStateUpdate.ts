@@ -1,7 +1,8 @@
 import {VoiceState} from "discord.js";
 import {ChannelType} from "discord-api-types/v10";
 import {musicBotId} from "../../config.json";
-import db from "../models";
+import {VC} from "../models/VC";
+import {VCGenerator} from "../models/VCGenerator";
 
 
 async function removeEmptyVC(oldState: VoiceState, newState: VoiceState) {
@@ -19,7 +20,6 @@ async function removeEmptyVC(oldState: VoiceState, newState: VoiceState) {
 }
 
 async function createNewVC(oldState: VoiceState, newState: VoiceState) {
-    const {VC, VCGenerator} = db;
     const channel = await VCGenerator.findByPk(newState.channelId);
     if (channel === null) {
         return;
@@ -45,7 +45,6 @@ async function changeAudioQuality(oldState: VoiceState, newState: VoiceState) {
         return;
     }
 
-    const {VC} = db;
     const channel = await VC.findByPk(newState.channelId);
     if (channel === null) {
         return;
@@ -66,6 +65,6 @@ export default {
         // Check if its a generator channel and make a new VC if yes
         await createNewVC(oldState, newState);
 
-        await changeAudioQuality(oldState, newState);
+        // await changeAudioQuality(oldState, newState);
     },
 };

@@ -1,7 +1,8 @@
 import {ChatInputCommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder} from "discord.js";
 import {ChannelType} from "discord-api-types/v10";
-import {VC, VCGenerator} from "../models";
 import {discordAdminRoleId} from "../../config.json";
+import {VC} from "../models/VC";
+import {VCGenerator} from "../models/VCGenerator";
 
 
 async function memberOwnsTheirChannel(interaction: ChatInputCommandInteraction) {

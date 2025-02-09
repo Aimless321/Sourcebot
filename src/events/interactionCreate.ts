@@ -1,5 +1,6 @@
 import {BaseInteraction} from "discord.js";
 import {commands} from "../commands";
+import logging from "../logging";
 
 export default {
     name: 'interactionCreate',
@@ -8,7 +9,9 @@ export default {
             const { commandName } = interaction;
             if (commands[commandName as keyof typeof commands]) {
                 await commands[commandName as keyof typeof commands].execute(interaction);
+                return;
             }
+            logging.error(`Command not found: ${commandName}`);
         }
 
         // let handler;

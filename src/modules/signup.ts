@@ -1,15 +1,38 @@
 import {
-    ActionRowBuilder, blockQuote, ButtonBuilder, CacheType, ChatInputCommandInteraction,
-    EmbedBuilder, hyperlink, MessageComponentInteraction, MessageFlags,
-    ModalBuilder, ModalSubmitInteraction, roleMention,
+    ActionRowBuilder,
+    blockQuote,
+    ButtonBuilder,
+    ButtonInteraction,
+    CacheType,
+    ChatInputCommandInteraction,
+    Client,
+    Collection,
+    EmbedBuilder,
+    Guild,
+    GuildMember,
+    GuildTextBasedChannel,
+    hyperlink, Message,
+    MessageComponentInteraction,
+    MessageFlags,
+    ModalBuilder,
+    ModalSubmitInteraction,
+    roleMention,
     RoleSelectMenuBuilder,
+    RoleSelectMenuInteraction,
+    SelectMenuInteraction, Snowflake,
     StringSelectMenuBuilder,
-    TextInputBuilder, time, userMention
+    StringSelectMenuInteraction,
+    StringSelectMenuOptionBuilder,
+    TextBasedChannel,
+    TextInputBuilder,
+    time,
+    userMention
 } from "discord.js";
 import {ButtonStyle, TextInputStyle} from "discord-api-types/v10";
 import {mandatorySignupRole, roleNotificationConfirmationChannel} from "../../config.json";
 import {EventSignup} from "../models/EventSignup";
 import {Event} from "../models/Event";
+import logging from "../logging";
 
 enum SignupCategory {
     ACCEPT = 'accept',
@@ -103,11 +126,11 @@ function getEventMentions(model: Event) {
     return model.mentionRoles?.map(roleId => roleMention(roleId)).join(' ');
 }
 
-function getEventButtons(model: Event) {
+function getEventButtons(model: Event): ActionRowBuilder<ButtonBuilder>[] {
     switch (model.options) {
         case 'signup_generic':
             return [
-                new ActionRowBuilder()
+                new ActionRowBuilder<ButtonBuilder>()
                     .setComponents(
                         new ButtonBuilder().setEmoji('1009511793913249812').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-accept'),
                         new ButtonBuilder().setEmoji('1009512341324443899').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-decline'),
@@ -116,13 +139,13 @@ function getEventButtons(model: Event) {
             ];
         case 'signup_categories':
             return [
-                new ActionRowBuilder()
+                new ActionRowBuilder<ButtonBuilder>()
                     .setComponents(
                         new ButtonBuilder().setEmoji('1009174334109126686').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-commander'),
                         new ButtonBuilder().setEmoji('1009174335535202414').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-infantry'),
                         new ButtonBuilder().setEmoji('1009174343701504051').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-tank')
                     ),
-                new ActionRowBuilder()
+                new ActionRowBuilder<ButtonBuilder>()
                     .setComponents(
                         new ButtonBuilder().setEmoji('1009174339511394456').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-recon'),
                         new ButtonBuilder().setEmoji('1009174331424776292').setStyle(ButtonStyle.Secondary).setCustomId('event-signup-arty'),
@@ -135,7 +158,7 @@ function getEventButtons(model: Event) {
     }
 }
 
-async function collectEventDetails(interaction: ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, boolean]> {
+async function collectEventDetails(interaction: ChatInputCommandInteraction): Promise<[ModalSubmitInteraction, Event]> {
     const modal = new ModalBuilder()
         .setCustomId('new-signup-modal')
         .setTitle('Create a new sign up');
@@ -156,35 +179,42 @@ async function collectEventDetails(interaction: ChatInputCommandInteraction): Pr
         .setStyle(TextInputStyle.Paragraph);
 
     modal.addComponents(
-        new ActionRowBuilder().addComponents(titleInput),
-        new ActionRowBuilder().addComponents(dateInput),
-        new ActionRowBuilder().addComponents(descriptionInput)
+        new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(dateInput),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(descriptionInput)
     );
 
     await interaction.showModal(modal);
 
+    // @ts-ignore
     const [newInteraction, model] = await interaction.awaitModalSubmit({time: 300_000})
         .then(interaction => {
             const title = interaction.fields.getTextInputValue('new-signup-title');
             const date = interaction.fields.getTextInputValue('new-signup-date');
             const description = stripquotes(interaction.fields.getTextInputValue('new-signup-description'));
 
-            return [interaction, Event.build({name: title, eventDate: new Date(date), description})];
+            return [interaction, Event.build({
+                name: title,
+                options: 'signup_generic',
+                mentionRoles: [],
+                eventDate: new Date(date),
+                description
+            })];
         })
         .catch(console.error);
 
     return [newInteraction, await model.save()];
 }
 
-async function collectSignUpInfo(interaction, model) {
+async function collectSignUpInfo(interaction: ModalSubmitInteraction, model: Event): Promise<ButtonInteraction> {
     const embed = await getEventEmbed(model);
 
-    const attendeeSelect = new ActionRowBuilder()
+    const attendeeSelect = new ActionRowBuilder<RoleSelectMenuBuilder>()
         .addComponents(new RoleSelectMenuBuilder()
             .setCustomId('signup-attendee-role')
             .setPlaceholder('Attendee role'))
 
-    const mentionSelect = new ActionRowBuilder()
+    const mentionSelect = new ActionRowBuilder<RoleSelectMenuBuilder>()
         .addComponents(
             new RoleSelectMenuBuilder()
                 .setCustomId('signup-mention-roles')
@@ -192,7 +222,7 @@ async function collectSignUpInfo(interaction, model) {
                 .setMaxValues(6),
         );
 
-    const optionsSelect = new ActionRowBuilder()
+    const optionsSelect = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
             new StringSelectMenuBuilder()
                 .setCustomId('signup-mention-options')
@@ -210,7 +240,7 @@ async function collectSignUpInfo(interaction, model) {
                 )
         );
 
-    const buttonRow = new ActionRowBuilder()
+    const buttonRow = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId('signup-info-submit')
@@ -218,16 +248,17 @@ async function collectSignUpInfo(interaction, model) {
                 .setLabel('Submit')
         )
 
-    const message = await interaction.reply({
+    const response = await interaction.reply({
         content: 'Please specify additional sign up details',
         flags: MessageFlags.Ephemeral,
         components: [attendeeSelect, mentionSelect, optionsSelect, buttonRow],
         embeds: [embed],
-        fetchReply: true
+        withResponse: true,
     });
 
-    const filter = i => {
+    const filter = (i: MessageComponentInteraction) => {
         if (!i.isButton()) {
+            // @ts-ignore
             handleValueChange(i, model);
             i.deferUpdate();
         }
@@ -235,13 +266,21 @@ async function collectSignUpInfo(interaction, model) {
         return i.user.id === interaction.user.id && i.isButton();
     };
 
-    return message.awaitMessageComponent({filter, time: 300_000})
+    if (!response.resource?.message) {
+        await interaction.followUp({content: 'Something went wrong..', flags: MessageFlags.Ephemeral});
+        logging.error('No message in response to collectSignUpInfo');
+        // @ts-ignore
+        return;
+    }
+
+    // @ts-ignore
+    return response.resource.message.awaitMessageComponent({filter, time: 300_000})
         .then(interaction => {
             return interaction;
-        }).catch(console.error);
+        }).catch(logging.fatal);
 }
 
-async function handleValueChange(interaction, model) {
+async function handleValueChange(interaction: RoleSelectMenuInteraction | StringSelectMenuInteraction, model: Event) {
     switch (interaction.customId) {
         case 'signup-attendee-role':
             model.attendeeRole = interaction.values[0];
@@ -257,17 +296,17 @@ async function handleValueChange(interaction, model) {
     await model.save();
 }
 
-function stripquotes(a) {
-    if (a.charAt(0) === '"' && a.charAt(a.length - 1) === '"') {
-        return a.substr(1, a.length - 2);
+function stripquotes(a: string) {
+    if (a.startsWith('"') && a.endsWith('"')) {
+        return a.slice(1, -1);
     }
     return a;
 }
 
-async function confirmInfo(interaction, model) {
+async function confirmInfo(interaction: ButtonInteraction, model: Event): Promise<[MessageComponentInteraction | null, boolean]> {
     const eventEmbed = await getEventEmbed(model);
 
-    const confirmButtons = new ActionRowBuilder().setComponents(
+    const confirmButtons = new ActionRowBuilder<ButtonBuilder>().setComponents(
         new ButtonBuilder()
             .setCustomId('signup-create-confirm')
             .setLabel('Confirm')
@@ -278,24 +317,31 @@ async function confirmInfo(interaction, model) {
             .setStyle(ButtonStyle.Danger)
     );
 
-    const message = await interaction.reply({
+    const response = await interaction.reply({
         flags: MessageFlags.Ephemeral,
         embeds: [eventEmbed],
         components: [confirmButtons],
-        fetchReply: true
+        withResponse: true,
     });
 
-    return message.awaitMessageComponent({time: 300_000})
+    if (!response.resource?.message) {
+        await interaction.followUp({content: 'Something went wrong..', flags: MessageFlags.Ephemeral});
+        logging.error('No message in response to confirmInfo');
+        return [interaction, false];
+    }
+
+    // @ts-ignore
+    return response.resource.message.awaitMessageComponent({time: 300_000})
         .then((interaction: MessageComponentInteraction) => {
             return [interaction, interaction.customId === 'signup-create-confirm'];
         }).catch(() => {
-            console.log('Confirmation expired');
-            return [interaction, false];
+            logging.info('Confirmation expired');
+            return [null, false];
         });
 }
 
 
-async function postEventMessage(channel, eventModel) {
+async function postEventMessage(channel: GuildTextBasedChannel, eventModel: Event) {
     const mentions = getEventMentions(eventModel);
     const embed = await getEventEmbed(eventModel);
     const buttons = getEventButtons(eventModel);
@@ -303,8 +349,13 @@ async function postEventMessage(channel, eventModel) {
     return await channel.send({content: mentions, embeds: [embed], components: buttons});
 }
 
-function formatListToFields(list, title, formatFunction) {
-    const formattedList = list.map(x => formatFunction(x)).join('\n');
+export function formatListToFields(list: any[] | Collection<any, any>, title: string, formatFunction: {
+    (member: any): string;
+    (member: any): string;
+    (arg0: any): any;
+}) {
+    // @ts-ignore
+    const formattedList = list.map((x: any) => formatFunction(x)).join('\n');
     let splitPos = formattedList.lastIndexOf("\n", 1024 - 24); // Split at less than 1024 for formatting purposes
     const hasToBeSplit = formattedList.length > 1024 && splitPos !== -1
 
@@ -333,95 +384,118 @@ function formatListToFields(list, title, formatFunction) {
     return fields;
 }
 
-async function getMembersThatHaveNotReplied(guild, event) {
-    const repliedBy = (await event.getEventSignups()).map(signup => signup.discordId);
+export async function getMembersThatHaveNotReplied(guild: Guild, event: Event): Promise<Collection<Snowflake, GuildMember>> {
+    const repliedBy = (await event.getEventSignups()).map((signup: EventSignup) => signup.discordId);
     const mandatoryRole = await guild.roles.fetch(mandatorySignupRole, {force: true});
+
+    if (!mandatoryRole) {
+        console.error('Invalid mandatory signup role');
+        return new Collection();
+    }
+
     const members = mandatoryRole.members;
 
-    return members.filter(member => !repliedBy.includes(member.id) && !member.user.bot);
+    return members.filter((member: GuildMember) => !repliedBy.includes(member.id) && !member.user.bot);
 }
 
-module.exports = {
-    async createNewSignUp(interaction: ChatInputCommandInteraction) {
-        const [interaction2, eventModel] = await collectEventDetails(interaction);
+export async function createNewSignUp(interaction: ChatInputCommandInteraction) {
+    if (interaction.channel === null) {
+        return await interaction.reply({
+            flags: MessageFlags.Ephemeral,
+            content: 'This command can only be used in a server channel'
+        });
+    }
 
+    const [interaction2, eventModel] = await collectEventDetails(interaction);
+    const interaction3 = await collectSignUpInfo(interaction2, eventModel);
+    const [interaction4, confirmed] = await confirmInfo(interaction3, eventModel);
 
-        const interaction3 = await collectSignUpInfo(interaction2, eventModel);
-        const [interaction4, confirmed] = await confirmInfo(interaction3, eventModel);
+    if (!confirmed) {
+        await eventModel.destroy();
 
-        if (!confirmed) {
-            await eventModel.destroy();
+        return await interaction.followUp({flags: MessageFlags.Ephemeral, content: 'Event creation cancelled.'});
+    }
 
-            return await interaction4.reply({flags: MessageFlags.Ephemeral, content: 'Event creation cancelled.'});
+    const message = await postEventMessage(interaction.channel as GuildTextBasedChannel, eventModel);
+    eventModel.channelId = message.channelId;
+    eventModel.messageId = message.id;
+    await eventModel.save();
+
+    await message.startThread({name: 'Signup Log'});
+
+    // @ts-ignore
+    return await interaction4.reply({flags: MessageFlags.Ephemeral, content: 'Event created'});
+}
+
+export async function editSignUp(interaction: ButtonInteraction, model: Event) {
+    const modal = new ModalBuilder()
+        .setCustomId('new-signup-modal')
+        .setTitle('Edit sign up');
+
+    const titleInput = new TextInputBuilder()
+        .setCustomId('new-signup-title')
+        .setLabel("Title")
+        .setStyle(TextInputStyle.Short)
+        .setValue(model.name);
+
+    const dateInput = new TextInputBuilder()
+        .setCustomId('new-signup-date')
+        .setLabel("Date and time")
+        .setStyle(TextInputStyle.Short)
+        .setValue(model.eventDate.toString());
+
+    const descriptionInput = new TextInputBuilder()
+        .setCustomId('new-signup-description')
+        .setLabel("Description")
+        .setStyle(TextInputStyle.Paragraph)
+        .setValue(model.description ?? "");
+
+    modal.addComponents(
+        new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(dateInput),
+        new ActionRowBuilder<TextInputBuilder>().addComponents(descriptionInput)
+    );
+
+    await interaction.showModal(modal);
+
+    return interaction.awaitModalSubmit({time: 300_000})
+        .then(async interaction => {
+            const title = interaction.fields.getTextInputValue('new-signup-title');
+            const date = interaction.fields.getTextInputValue('new-signup-date');
+            const description = stripquotes(interaction.fields.getTextInputValue('new-signup-description'));
+
+            model.name = title;
+            model.eventDate = new Date(date);
+            model.description = description;
+            await model.save();
+
+            const embed = await getEventEmbed(model);
+            // @ts-ignore
+            await interaction.message.edit({embeds: [embed]});
+
+            return interaction.reply({content: 'Updated event details', flags: MessageFlags.Ephemeral});
+        })
+        .catch(console.error);
+}
+
+export async function removeSignUpForm(model: Event, client: Client) {
+    await model.destroy();
+
+    try {
+        if (!model.channelId || !model.messageId) {
+            return false;
         }
 
-        const message = await postEventMessage(interaction.channel, eventModel);
-        eventModel.channelId = message.channelId;
-        eventModel.messageId = message.id;
-        await eventModel.save();
+        const channel = await client.channels.fetch(model.channelId, {force: true});
+        if (!channel) {
+            return false;
+        }
 
-        await message.startThread({name: 'Signup Log'});
+        const message = await (channel as GuildTextBasedChannel).messages.fetch(model.messageId);
 
-        return await interaction4.reply({flags: MessageFlags.Ephemeral, content: 'Event created'});
-    },
-    async editSignUp(interaction, model) {
-        const modal = new ModalBuilder()
-            .setCustomId('new-signup-modal')
-            .setTitle('Edit sign up');
-
-        const titleInput = new TextInputBuilder()
-            .setCustomId('new-signup-title')
-            .setLabel("Title")
-            .setStyle(TextInputStyle.Short)
-            .setValue(model.name);
-
-        const dateInput = new TextInputBuilder()
-            .setCustomId('new-signup-date')
-            .setLabel("Date and time")
-            .setStyle(TextInputStyle.Short)
-            .setValue(model.eventDate.toString());
-
-        const descriptionInput = new TextInputBuilder()
-            .setCustomId('new-signup-description')
-            .setLabel("Description")
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(model.description);
-
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(titleInput),
-            new ActionRowBuilder().addComponents(dateInput),
-            new ActionRowBuilder().addComponents(descriptionInput)
-        );
-
-        await interaction.showModal(modal);
-
-        return interaction.awaitModalSubmit({time: 300_000})
-            .then(async interaction => {
-                const title = interaction.fields.getTextInputValue('new-signup-title');
-                const date = interaction.fields.getTextInputValue('new-signup-date');
-                const description = stripquotes(interaction.fields.getTextInputValue('new-signup-description'));
-
-                model.name = title;
-                model.eventDate = date;
-                model.description = description;
-                await model.save();
-
-                const embed = await getEventEmbed(model);
-                await interaction.message.edit({embeds: [embed]});
-
-                return interaction.reply({content: 'Updated event details', flags: MessageFlags.Ephemeral});
-            })
-            .catch(console.error);
-    },
-    async removeSignUpForm(model, client) {
-        await model.destroy();
-
-        try {
-            const channel = await client.channels.fetch(model.channelId, {force: true});
-            const message = await channel.messages.fetch(model.messageId);
-
-            if (model.attendeeRole) {
-                const role = message.guild.roles.cache.get(model.attendeeRole);
+        if (model.attendeeRole) {
+            const role = message.guild.roles.cache.get(model.attendeeRole);
+            if (role) {
                 const data = {
                     name: role.name,
                     color: role.color,
@@ -432,88 +506,103 @@ module.exports = {
                 };
 
                 await role.delete('Emptying role');
-                await message.guild.roles.create({data});
             }
-
-            await message.delete();
-            await EventSignup.destroy({where: {eventId: model.id}});
-            await model.destroy();
-        } catch (e) {
-            console.error(e);
-            return false;
         }
 
+        await message.delete();
+        await EventSignup.destroy({where: {eventId: model.id}});
+        await model.destroy();
+    } catch (e) {
+        console.error(e);
+        return false;
+    }
 
-        return true;
-    },
-    async updateSignup(interaction, model) {
-        const embed = await getEventEmbed(model);
+    return true;
+}
 
-        await interaction.message.edit({embeds: [embed]});
-    },
-    async sendRemindersForEvent(client, event, hoursTillEvent) {
-        const channel = await client.channels.fetch(event.channelId);
-        const message = await channel.messages.fetch(event.messageId);
-        const members = await getMembersThatHaveNotReplied(message.guild, event);
+export async function updateSignup(interaction: ButtonInteraction, model: Event) {
+    const embed = await getEventEmbed(model);
 
-        console.log(`Found ${members.size} mandatory signup members`);
+    await interaction.message.edit({embeds: [embed]});
+}
 
-        const embed = new EmbedBuilder()
-            .setTitle('The Circle - Signup reminder')
-            .setDescription(`
+export async function sendRemindersForEvent(client: Client, event: Event, hoursTillEvent?: number) {
+    if (!event.channelId || !event.messageId) {
+        logging.error('Failed to send reminders for event: Event has no channel or message');
+        return;
+    }
+
+    const channel = await client.channels.fetch(event.channelId);
+
+    if (!channel) {
+        logging.error('Failed to send reminders for event: Channel deleted');
+        return;
+    }
+
+    const message = await (channel as GuildTextBasedChannel).messages.fetch(event.messageId);
+    const members = await getMembersThatHaveNotReplied(message.guild, event);
+
+    console.log(`Found ${members.size} mandatory signup members`);
+
+    const embed = new EmbedBuilder()
+        .setTitle('The Circle - Signup reminder')
+        .setDescription(`
                     We ask all of our comp members to reply to all matches, even if you can't make it to the event.
                     
                     Please reply to [${event.name}](${message.url}) - ${time(event.eventDate, 'F')}`
-            );
-
-        let remindersSent = 0;
-        const successfulReminders = [];
-        const failedReminders = [];
-        const messages = [];
-        members.forEach(member => {
-            const message = member.send({embeds: [embed]}).then(() => {
-                remindersSent++;
-                console.log('Reminder sent to', member.displayName);
-                successfulReminders.push(member);
-            }).catch(() => {
-                console.error('Cannot send DM to', member.displayName);
-                failedReminders.push(member);
-            });
-
-            messages.push(message);
-        });
-        await Promise.all(messages);
-
-        const formatFunction = member => `${member.toString()} (${member.displayName})`;
-        const fields = formatListToFields(
-            successfulReminders,
-            `Sent DMs to: (${successfulReminders.length})`,
-            formatFunction
         );
-        fields.push({
-            inline: true,
-            name: `​`,
-            value: '​'
-        });
-        fields.push(...formatListToFields(
-            failedReminders,
-            `Couldn't send DMs to: (${failedReminders.length})`,
-            formatFunction
-        ));
 
-        const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
-        await confirmationChannel.send({
-            embeds: [{
-                title: "Sent sign up reminders",
-                description: `${remindersSent} reminders sent for ${event.name} (${hoursTillEvent} hours till event)`,
-                color: 501760,
-                fields
-            }]
-        }).catch(error => {
-            console.info('Failed to send signup confirmation');
-            console.error(error);
+    let remindersSent = 0;
+    const successfulReminders: GuildMember[] = [];
+    const failedReminders: GuildMember[] = [];
+    const messages: Promise<any>[] = [];
+    members.forEach(member => {
+        const message = member.send({embeds: [embed]}).then(() => {
+            remindersSent++;
+            console.log('Reminder sent to', member.displayName);
+            successfulReminders.push(member);
+        }).catch(() => {
+            console.error('Cannot send DM to', member.displayName);
+            failedReminders.push(member);
         });
-    },
-    formatListToFields,
-    getMembersThatHaveNotReplied
+
+        messages.push(message);
+    });
+    await Promise.all(messages);
+
+    const formatFunction = (member: GuildMember) => `${member.toString()} (${member.displayName})`;
+    const fields = formatListToFields(
+        successfulReminders,
+        `Sent DMs to: (${successfulReminders.length})`,
+        formatFunction
+    );
+    fields.push({
+        inline: true,
+        name: `​`,
+        // @ts-ignore
+        value: '​'
+    });
+    fields.push(...formatListToFields(
+        failedReminders,
+        `Couldn't send DMs to: (${failedReminders.length})`,
+        formatFunction
+    ));
+
+    const confirmationChannel = await client.channels.fetch(roleNotificationConfirmationChannel);
+    if (!confirmationChannel) {
+        console.error('Failed to send signup confirmation: Confirmation channel not found');
+        return;
+    }
+
+    await (confirmationChannel as GuildTextBasedChannel).send({
+        embeds: [{
+            title: "Sent sign up reminders",
+            description: `${remindersSent} reminders sent for ${event.name} (${hoursTillEvent} hours till event)`,
+            color: 501760,
+            fields
+        }]
+    }).catch(error => {
+        console.info('Failed to send signup confirmation');
+        console.error(error);
+    });
 }

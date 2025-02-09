@@ -1,7 +1,7 @@
 import {
     AutocompleteInteraction,
     CacheType,
-    ChatInputCommandInteraction, GuildMember,
+    ChatInputCommandInteraction, Guild, GuildMember,
     MessageFlags,
     SlashCommandBuilder
 } from "discord.js";
@@ -68,12 +68,12 @@ async function showEventStatus(interaction: ChatInputCommandInteraction<CacheTyp
 
     await interaction.deferReply();
 
-    const members = await getMembersThatHaveNotReplied(interaction.guild, eventModel);
+    const members = await getMembersThatHaveNotReplied(interaction.guild as Guild, eventModel);
 
     const fields = formatListToFields(
         members,
         `Members that haven't replied yet: (${members.size})`,
-        member => `${member.toString()} (${member.displayName})`
+        (member: GuildMember) => `${member.toString()} (${member.displayName})`
     );
 
     return await interaction.editReply({
@@ -132,16 +132,21 @@ export const data = new SlashCommandBuilder()
 export async function autocomplete(interaction: AutocompleteInteraction) {
     const focusedValue = interaction.options.getFocused();
     const choices = await Event.findAll({raw: true});
-    const filtered = choices.filter(choice => choice.name.startsWith(focusedValue));
+    // @ts-ignore
+    const filtered = choices.filter((choice) => choice.name.startsWith(focusedValue));
     await interaction.respond(
-        filtered.map(choice => ({value: choice.name, name: `${choice.name} (${choice.eventDate.toString()})`})),
+        // @ts-ignore
+        filtered.map((choice) => ({value: choice.name, name: `${choice.name} (${choice.eventDate.toString()})`})),
     );
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     const member = interaction.member as GuildMember;
     if (!member.roles.cache.has(adminRoleId)) {
-        return interaction.reply({content: 'You don\'t have permission for this command', flags: MessageFlags.Ephemeral})
+        return interaction.reply({
+            content: 'You don\'t have permission for this command',
+            flags: MessageFlags.Ephemeral
+        })
     }
 
     switch (interaction.options.getSubcommand()) {
