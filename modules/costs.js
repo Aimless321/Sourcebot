@@ -20,58 +20,49 @@ function progressBar(value, maxValue, size) {
 }
 
 async function getCostsEmbed() {
-    const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}?fields%5Bcampaign%5D=pledge_sum`;
-    const res = await fetch(PATREON_API_URL, {
-        headers: {
-            'Authorization': `Bearer ${patreonKey}`
-        }
-    });
-    if (!res.ok) {
-        throw new Error(`Failed to fetch Patreon data: ${res.statusText}`);
-    }
-
-    const patreonContributions = (await res.json()).data.attributes.pledge_sum;
-
-    const contributions = await Contribution.findOne({
-        attributes: [
-            [sequelize.fn("SUM", sequelize.col("amount")), "total"],
-        ],
-        raw: true
-    });
-
-    const totalContributions = patreonContributions + contributions.total;
-
     const costs = await Cost.findAll({order: [["amount", "DESC"]]});
 
     let totalCosts = 0;
     let costsString = "";
     for (const cost of costs) {
         totalCosts += cost.amount;
-        costsString += `${cost.title}: €${(cost.amount / 100).toFixed(2)}\n`;
+        costsString += `• ${cost.title}: €${(cost.amount / 100).toFixed(2)}\n`;
     }
 
     const embed = new EmbedBuilder()
         .setColor(0xd4af37)
-        .setTitle("The Circle needs your support!")
-        .setDescription("All of our costs are covered by our members and donations through our [Patreon](https://www.patreon.com/CircleGaming).\n")
-        .setFields(
+        .setTitle("Support The Circle! 💥")
+        .setDescription(
+            "Your donation supports our community and allows us to keep our servers thriving. " +
+            "Enjoy one of the most affordable VIP access options available, offering premium benefits without breaking the bank. " +
+            "All expenses are covered by contributions made through our [Patreon](https://www.patreon.com/CircleGaming)."
+        )
+        .addFields(
             {
-                name: 'Monthly cost breakdown',
-                value: `${costsString}\nTotal costs: €${(totalCosts / 100).toFixed(2)}`
+                name: "Monthly Cost Breakdown 💸",
+                value: `${costsString}**Total:** €${(totalCosts / 100).toFixed(2)}\n`,
+                inline: false
             },
             {
-                name: 'Current contributions (Patreon + Sponsors)',
-                value: `€${(totalContributions / 100).toFixed(2)}\n${progressBar(totalContributions, totalCosts, 22)}`
+                name: "Why Donate? 🎖️",
+                value: "• **Skip the Queue:** Instantly access VIP servers without waiting.\n" +
+                    "• **Exclusive Commands:** Unlock special Discord & in-game perks.\n" +
+                    "• **VIP Perks:** Enjoy bonus VIP days to share with a friend.",
+                inline: false
             }
-        );
+        )
+        .setFooter({
+            text: "Support The Circle by donating today.",
+            iconURL: "https://cdn.discordapp.com/attachments/1008449825982926938/1341353683572621362/the-circle-large-rotating.gif?ex=67b5b077&is=67b45ef7&hm=c4dee7c2e67bd744b273ca30f5afb2c00316fe38b6a505d85c833512b86b5276&"
+        })
 
     const buttons = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setLabel('Patreon')
+                .setLabel("Donate Here")
                 .setURL(patreonUrl)
-                .setStyle(ButtonStyle.Link),
-        )
+                .setStyle(ButtonStyle.Link)
+        );
 
     return {embeds: [embed], components: [buttons]};
 }
