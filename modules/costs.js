@@ -1,4 +1,4 @@
-const {patreonId, patreonUrl} = require("../config.json");
+const {patreonId, patreonUrl, patreonKey} = require("../config.json");
 const fetch = require("node-fetch-native");
 const {Contribution, Cost, CostOverview} = require("../models");
 const sequelize = require("sequelize");
@@ -20,8 +20,12 @@ function progressBar(value, maxValue, size) {
 }
 
 async function getCostsEmbed() {
-    const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}`;
-    const res = await fetch(PATREON_API_URL);
+    const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}?fields%5Bcampaign%5D=pledge_sum`;
+    const res = await fetch(PATREON_API_URL, {
+        headers: {
+            'Authorization': `Bearer ${patreonKey}`
+        }
+    });
     if (!res.ok) {
         throw new Error(`Failed to fetch Patreon data: ${res.statusText}`);
     }
