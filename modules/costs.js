@@ -22,6 +22,10 @@ function progressBar(value, maxValue, size) {
 async function getCostsEmbed() {
     const PATREON_API_URL = `https://www.patreon.com/api/campaigns/${patreonId}`;
     const res = await fetch(PATREON_API_URL);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch Patreon data: ${res.statusText}`);
+    }
+
     const patreonContributions = (await res.json()).data.attributes.pledge_sum;
 
     const contributions = await Contribution.findOne({

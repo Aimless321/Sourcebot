@@ -45,7 +45,7 @@ ALWAYS vary your style, references, tone, structure, and jokes so that consecuti
 - Signups for comp matches in "<#1092443108974796820>"
 - Check out weekly events in "<#1295436920117133394>" and "<#1296219105765888021>"
 
-Be sure it’s funny, fresh, and unique each time.
+Be sure it’s funny, fresh, and unique each time. Always include all the discord channels that are defined with <#>.
     `;
 
         const userMessage = `
