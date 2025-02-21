@@ -5,6 +5,14 @@ import {cleanUpEvents, sendRecruitNotifications, sendSignupReminders} from "./mo
 import {Client, GatewayIntentBits} from "discord.js";
 import {events} from './events';
 import logging from "./logging";
+import "dotenv/config";
+import {drizzle} from "drizzle-orm/libsql";
+import {migrate} from "drizzle-orm/libsql/migrator";
+
+const db = drizzle({connection: process.env.DB_FILE_NAME!, casing: 'snake_case'});
+await migrate(db, {
+    migrationsFolder: './migrations',
+});
 
 const client = new Client({
     intents: [

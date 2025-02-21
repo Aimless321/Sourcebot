@@ -3,17 +3,21 @@
   "version": "1.0.0",
   "description": "Clan discord bot",
   "main": "src/index.ts",
+  "type": "module",
   "author": "Aimless321",
   "license": "ISC",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "build": "tsup src --outDir dist --minify"
   },
   "dependencies": {
     "@discordjs/rest": "^2.4.2",
+    "@libsql/client": "^0.14.0",
     "discord-api-types": "^0.37.119",
     "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.39.3",
     "node-cron": "^3.0.3",
     "openai": "^4.83.0",
     "sequelize": "^6.37.5",
@@ -22,6 +26,7 @@
   },
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
+    "drizzle-kit": "^0.30.4",
     "sequelize-cli": "^6.6.0",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",
